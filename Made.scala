@@ -14,30 +14,22 @@ import scala.quoted.*
  * Unlike the standard library `Mirror`, `Made` carries per-element metadata (annotations,
  * default values, labels) and supports `@generated` members that compute derived values.
  *
- * === Example ===
- *
- * ```scala sc:nocompile
+ * @example
+ * {{{
  * import made.*
  *
  * case class User(name: String, age: Int)
  *
  * val mirror: Made.ProductOf[User] = Made.derived[User]
- * ```
- *
- * Type-level output:
- * ```scala
  * // mirror type members:
  * //   type MirroredType = User
  * //   type MirroredLabel = "User"
  * //   type Metadata = Meta
  * //   type MirroredElems = MadeFieldElem { ... } *: MadeFieldElem { ... } *: EmptyTuple
- * ```
  *
- * Runtime usage:
- * ```scala sc:nocompile
  * val (nameFld, ageFld) = mirror.mirroredElems
  * val user = mirror.fromUnsafeArray(Array("Alice", 30))
- * ```
+ * }}}
  *
  * @see [[Made.Product]]
  * @see [[Made.Sum]]
@@ -96,9 +88,8 @@ sealed trait Made:
  *  - [[MadeSubSingletonElem]] -- singleton subtypes in sum mirrors
  *  - [[GeneratedMadeElem]] -- `@generated` members (in `GeneratedElems`)
  *
- * === Example ===
- *
- * ```scala sc:nocompile
+ * @example
+ * {{{
  * import made.*
  *
  * case class User(name: String, age: Int)
@@ -107,7 +98,7 @@ sealed trait Made:
  * val (nameFld, ageFld) = mirror.mirroredElems
  * // nameFld: MadeFieldElem { type MirroredType = String; type MirroredLabel = "name" }
  * // ageFld:  MadeFieldElem { type MirroredType = Int;    type MirroredLabel = "age"  }
- * ```
+ * }}}
  *
  * @see [[MadeFieldElem]]
  * @see [[MadeSubElem]]
@@ -134,22 +125,22 @@ sealed trait MadeElem:
  * Each entry in [[Made.Product]]'s `MirroredElems` tuple is a `MadeFieldElem`,
  * providing the field's type, label, metadata, and default value.
  *
- * === Default Resolution ===
- *
- * The `default` method resolves a default value for this field using the
- * following priority chain (first match wins):
- *
- *  1. `@whenAbsent(value)` -- explicit default from annotation (highest priority)
- *  2. `@optionalParam` -- uses `Default[T]` for option-like types
- *  3. Constructor default -- the Scala-level default parameter value
- *  4. `None` -- no default available
- *
  * @see [[MadeElem]]
  * @see [[MadeSubElem]]
  * @see [[GeneratedMadeElem]]
  * @see [[Made.Product]]
  */
 sealed trait MadeFieldElem extends MadeElem:
+  /**
+   * Resolves a default value for this field using the following priority chain (first match wins):
+   *
+   *  1. `@whenAbsent(value)` -- explicit default from annotation (highest priority)
+   *  2. `@optionalParam` -- uses `Default[T]` for option-like types
+   *  3. Constructor default -- the Scala-level default parameter value
+   *  4. `None` -- no default available
+   *
+   * @return the default value if available, `None` otherwise
+   */
   def default: Option[MirroredType]
 
 object MadeFieldElem:
@@ -187,6 +178,7 @@ object MadeSubElem:
  * @see [[Made.Singleton]]
  */
 sealed trait MadeSubSingletonElem extends MadeSubElem:
+  /** Returns the singleton instance. */
   def value: MirroredType
 
 object MadeSubSingletonElem:
@@ -641,6 +633,7 @@ object Made:
    * @see [[GeneratedMadeElem]]
    */
   sealed trait Product extends Made:
+    /** Constructs an instance of `MirroredType` from an untyped array of field values. */
     def fromUnsafeArray(product: Array[Any]): MirroredType
 
   /**
@@ -674,6 +667,7 @@ object Made:
    */
   sealed trait Singleton extends Made:
     final type MirroredElems = EmptyTuple
+    /** Returns the singleton instance. */
     def value: MirroredType
     final def mirroredElems: MirroredElems = EmptyTuple
 

@@ -11,11 +11,12 @@ import scala.quoted.*
  * `AnnotatedType` chain to find annotations of the requested type. Both methods
  * are inline and resolved entirely at compile time.
  *
- * IMPORTANT: These methods work ONLY on [[Made]] instances, NOT on [[MadeElem]].
+ * @note These methods work ONLY on [[Made]] instances, NOT on [[MadeElem]].
  * Element-level metadata is accessible as the `Metadata` type member on each
  * element but has no convenience query methods.
  *
- * ```scala
+ * @example
+ * {{{
  * import made.*
  * import made.annotation.*
  *
@@ -27,7 +28,7 @@ import scala.quoted.*
  * val mirror = Made.derived[User]
  * mirror.hasAnnotation[JsonName]          // true
  * mirror.getAnnotation[JsonName].get.value // "user_record"
- * ```
+ * }}}
  *
  * @see [[made.Made]]
  * @see [[made.annotation.MetaAnnotation]]
