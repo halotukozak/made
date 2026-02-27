@@ -39,7 +39,7 @@ jobs:
           -social-links:github::https://github.com/halotukozak/made \
           -snippet-compiler:compile \
           -source-links:"src=github://halotukozak/made?tag=${{ github.ref_name }}" \
-          -revision:"${{ github.ref_name }}"
+          -revision:${{ github.ref_name }}
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
