@@ -1,6 +1,6 @@
 package made
 
-sealed trait OptionLike[O]:
+trait OptionLike[O]:
   type Value
 
   def none: O

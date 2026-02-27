@@ -126,6 +126,43 @@ class MadeDefaultsTest extends munit.FunSuite:
     assert(next.default.contains(None))
   }
 
+  test("@optionalParam provides default from OptionLike") {
+    val m = Made.derived[WithOptionalParam]
+
+    val (x, y, z) = m.mirroredElems
+
+    assertEquals(x.default, Some(None))
+    assertEquals(y.default, Some(null: String | Null))
+    assertEquals(z.default, None)
+  }
+
+  test("@optionalParam priority") {
+    val m = Made.derived[OptionalParamPriority]
+
+    val (a, b) = m.mirroredElems
+
+    // @whenAbsent(Some(42)) should take priority over @optionalParam
+    assertEquals(a.default, Some(Some(42)))
+    // @optionalParam should take priority over Scala default None
+    // Wait, let's check the code:
+    // fromWhenAbsent orElse fromOptionalParam orElse fromDefaultValue
+    assertEquals(b.default, Some(None))
+  }
+
+  test("@optionalParam with custom OptionLike") {
+    given OptionLike[CustomOpt[String]] with
+      override type Value = String
+      def none: CustomOpt[String] = CustomOpt("none")
+      def some(v: String): CustomOpt[String] = CustomOpt(v)
+      def isDefined(o: CustomOpt[String]): Boolean = o.value != "none"
+      def get(o: CustomOpt[String]): String = o.value
+      val ignoreNulls = false
+
+    val m = Made.derived[WithCustomOptional]
+    val x *: EmptyTuple = m.mirroredElems
+    assertEquals(x.default, Some(CustomOpt("none")))
+  }
+
 case class WithDefaults(x: Int, y: String = "hello", z: Boolean = true)
 case class AllDefaults(a: Int = 1, b: String = "test")
 case class MixedDefaults(required: Int, optional: String = "default")
@@ -137,6 +174,20 @@ case class WhenAbsentOverridesDefault(
   @whenAbsent("fromAnnotation") b: String = "fromDefault",
 )
 case class MixedWhenAbsent(a: Int, @whenAbsent(99) b: Int, c: String = "scalaDefault")
+
+case class WithOptionalParam(
+  @optionalParam x: Option[Int],
+  @optionalParam y: String | Null,
+  z: Option[String]
+)
+
+case class OptionalParamPriority(
+  @whenAbsent(Some(42)) @optionalParam a: Option[Int],
+  @optionalParam b: Option[Int] = Some(1)
+)
+
+case class CustomOpt[A](value: A)
+case class WithCustomOptional(@optionalParam x: CustomOpt[String])
 
 object RecWithDefault:
   case class Node(value: Int, @whenAbsent(None) next: Option[Node])
