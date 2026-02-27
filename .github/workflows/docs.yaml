@@ -32,12 +32,12 @@ jobs:
       - name: Generate documentation
         run:
           scala-cli doc . -- \
-          -project alpaca \
+          -project M&DE \
           -project-version ${{ github.ref_name }} \
           -project-footer "made with ❤️ and coffee" \
           -social-links:github::https://github.com/halotukozak/made \
           -snippet-compiler:compile \
-          -source-links:"src=github://halotukozak/alpaca?tag=${{ github.ref_name }}" \
+          -source-links:"src=github://halotukozak/made?tag=${{ github.ref_name }}" \
           -revision:"${{ github.ref_name }}"
       - name: Setup Pages
         uses: actions/configure-pages@v5
