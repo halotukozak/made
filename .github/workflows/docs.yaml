@@ -33,7 +33,7 @@ jobs:
       - name: Generate documentation
         run:
           scala-cli --power doc . -- \
-          -project M&DE \
+          -project "M&DE" \
           -project-version ${{ github.ref_name }} \
           -project-footer "made with ❤️ and coffee" \
           -social-links:github::https://github.com/halotukozak/made \
