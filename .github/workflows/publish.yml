@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      - name: Setup coursier cache
+        uses: coursier/cache-action@v8.0
       - uses: VirtusLab/scala-cli-setup@v1.12.3
       - name: Run tests
         run: scala-cli --power test .
