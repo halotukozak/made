@@ -18,8 +18,8 @@ jobs:
       - name: Publish
         run: |
           scala-cli --power publish . \
-            --user "${{ secrets.SONATYPE_USERNAME }}" \
-            --password "${{ secrets.SONATYPE_PASSWORD }}" \
-            --secret-key "${{ secrets.PUBLISH_GPG_KEY }}" \
-            --secret-key-password "${{ secrets.PUBLISH_GPG_PASSPHRASE }}"
+            --user "env:${{ secrets.SONATYPE_USERNAME }}" \
+            --password "env:${{ secrets.SONATYPE_PASSWORD }}" \
+            --secret-key "env:${{ secrets.PUBLISH_GPG_KEY }}" \
+            --secret-key-password "env:${{ secrets.PUBLISH_GPG_PASSPHRASE }}"
             --checks:all
