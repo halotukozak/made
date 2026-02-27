@@ -144,7 +144,6 @@ sealed trait MadeFieldElem extends MadeElem:
   def default: Option[MirroredType]
 
 object MadeFieldElem:
-  /** Convenience alias for `MadeFieldElem { type MirroredType = T }`, used in type-level matching. */
   type Of[T] = MadeFieldElem { type MirroredType = T }
 
 /**
@@ -163,7 +162,6 @@ object MadeFieldElem:
 sealed trait MadeSubElem extends MadeElem
 
 object MadeSubElem:
-  /** Convenience alias for `MadeSubElem { type MirroredType = T }`. */
   type Of[T] = MadeSubElem { type MirroredType = T }
 
 /**
@@ -182,7 +180,6 @@ sealed trait MadeSubSingletonElem extends MadeSubElem:
   def value: MirroredType
 
 object MadeSubSingletonElem:
-  /** Convenience alias for `MadeSubSingletonElem { type MirroredType = T }`. */
   type Of[T] = MadeSubSingletonElem { type MirroredType = T }
 
 /**
@@ -207,10 +204,7 @@ sealed trait GeneratedMadeElem extends MadeFieldElem:
   final def default: Option[MirroredType] = None
 
 object GeneratedMadeElem:
-  /** Convenience alias for `GeneratedMadeElem { type MirroredType = T }`. */
   type Of[T] = GeneratedMadeElem { type MirroredType = T }
-
-  /** Convenience alias for `GeneratedMadeElem { type OuterMirroredType = Outer }`. */
   type OuterOf[Outer] = GeneratedMadeElem { type OuterMirroredType = Outer }
 
 // workaround for https://github.com/scala/scala3/issues/25245
@@ -219,38 +213,20 @@ sealed trait GeneratedMadeElemWorkaround[Outer, Elem] extends GeneratedMadeElem:
   final type MirroredType = Elem
 
 object MadeElem:
-  /** Convenience alias for `MadeElem { type MirroredType = T }`. */
   type Of[T] = MadeElem { type MirroredType = T }
-
-  /** Convenience alias for `MadeElem { type MirroredLabel = l }`. */
   type LabelOf[l <: String] = MadeElem { type MirroredLabel = l }
-
-  /** Convenience alias for `MadeElem { type Metadata = m }`. */
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
 
-/** Base type for the `Metadata` type member when no annotations are present. */
 private trait Meta
 
 object Made:
-  /** [[Made]] refined with `MirroredType = T`. */
   type Of[T] = Made { type MirroredType = T }
-
-  /** [[Made.Product]] refined with `MirroredType = T`. */
   type ProductOf[T] = Made.Product { type MirroredType = T }
-
-  /** [[Made.Sum]] refined with `MirroredType = T`. */
   type SumOf[T] = Made.Sum { type MirroredType = T }
-
-  /** [[Made.Singleton]] refined with `MirroredType = T`. */
   type SingletonOf[T] = Made.Singleton { type MirroredType = T }
-
-  /** [[Made.Transparent]] refined with `MirroredType = T` and `MirroredElemType = U`. */
   type TransparentOf[T, U] = Made.Transparent { type MirroredType = T; type MirroredElemType = U }
 
-  /** [[MadeElem]] refined with `MirroredLabel = l`. */
   type LabelOf[l <: String] = MadeElem { type MirroredLabel = l }
-
-  /** [[MadeElem]] refined with `Metadata = m`. */
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
 
   /**
