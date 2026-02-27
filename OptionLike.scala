@@ -39,4 +39,17 @@ object OptionLike:
 
     override def get(opt: Option[A]): A = opt.get
 
-    override def ignoreNulls: Boolean = true
+    override val ignoreNulls: Boolean = true
+
+  given [A <: AnyRef] => OptionLike.Aux[A | Null, A] = new OptionLike[A | Null]:
+    override type Value = A
+
+    override val none: Null = null
+
+    override def some(value: A): A = value
+
+    override def isDefined(opt: A | Null): Boolean = opt ne null
+
+    override def get(opt: A | Null): A = opt.nn
+
+    override val ignoreNulls: Boolean = false
