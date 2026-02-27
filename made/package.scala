@@ -1,4 +1,3 @@
-
 /**
  * Extended mirrors for Scala types, adding annotation metadata, element-level detail,
  * and generated member support on top of standard `scala.deriving.Mirror`.

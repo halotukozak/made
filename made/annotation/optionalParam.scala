@@ -1,4 +1,5 @@
 package made.annotation
+
 /**
  * Marks a field to use `OptionLike.none` as its default value.
  *
