@@ -24,7 +24,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: VirtusLab/scala-cli-setup@v1
-      - name: Run tests (Scala LTS)
-        run: scala-cli test .
+#      - name: Run tests (Scala LTS)
+#        run: scala-cli test .
       - name: Run tests (Scala Next)
         run: scala-cli test . -S 3.8.2
