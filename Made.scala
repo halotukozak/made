@@ -35,7 +35,7 @@ import scala.quoted.*
  *
  * === Example ===
  *
- * ```scala
+ * ```scala sc:nocompile
  * import made.*
  *
  * case class User(name: String, age: Int)
@@ -53,7 +53,7 @@ import scala.quoted.*
  * ```
  *
  * Runtime usage:
- * ```scala
+ * ```scala sc:nocompile
  * val (nameFld, ageFld) = mirror.mirroredElems
  * val user = mirror.fromUnsafeArray(Array("Alice", 30))
  * ```
@@ -110,7 +110,7 @@ sealed trait Made:
  *
  * === Example ===
  *
- * ```scala
+ * ```scala sc:nocompile
  * import made.*
  *
  * case class User(name: String, age: Int)
