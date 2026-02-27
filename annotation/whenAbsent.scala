@@ -1,6 +1,5 @@
 package made.annotation
 
-import scala.annotation.{Annotation, RefiningAnnotation}
 import scala.quoted.*
 
 /**
