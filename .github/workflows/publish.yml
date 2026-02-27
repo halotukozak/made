@@ -1,8 +1,8 @@
 name: Publish
 on:
   push:
-  #    tags:
-  #      - 'v*'
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -27,19 +27,3 @@ jobs:
             --password "env:SONATYPE_PASSWORD" \
             --secret-key "env:PGP_PRIVATE_KEY" \
             --secret-key-password "env:PGP_PASSPHRASE"
-
-      - name: Inspect generated signatures (temp)
-        if: always()
-        run: |
-          set -euo pipefail
-          echo "Searching for .asc files produced during publish..."
-          find . -type f -name "*.asc" -print | head -n 200 || true
-
-          sig="$(find . -type f -name "*.asc" | head -n 1 || true)"
-          if [ -z "${sig}" ]; then
-            echo "No .asc signatures found in workspace."
-            exit 0
-          fi
-
-          echo "Inspecting first signature: ${sig}"
-          gpg --list-packets "${sig}" | sed -n '1,120p'
