@@ -643,6 +643,7 @@ object Made:
    */
   sealed trait Singleton extends Made:
     final type MirroredElems = EmptyTuple
+
     /** Returns the singleton instance. */
     def value: MirroredType
     final def mirroredElems: MirroredElems = EmptyTuple
