@@ -28,7 +28,7 @@ jobs:
       - name: Setup coursier cache
         uses: coursier/cache-action@v8.0
       - name: Setup scala-cli
-        uses: VirtusLab/scala-cli-setup@v1.4.0
+        uses: VirtusLab/scala-cli-setup@v1.12.3
       - name: Generate documentation
         run: scala-cli doc .
       - name: Setup Pages
