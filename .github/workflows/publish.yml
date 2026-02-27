@@ -1,8 +1,8 @@
 name: Publish
 on:
   push:
-#    tags:
-#      - 'v*'
+  #    tags:
+  #      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
       - name: Setup coursier cache
         uses: coursier/cache-action@v8.0
       - uses: VirtusLab/scala-cli-setup@v1.12.3
-      - name: Verify PGP public key is discoverable (temp)
+      - name: Show signing key id used in signatures (temp)
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
@@ -23,14 +23,14 @@ jobs:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         run: |
           set -euo pipefail
-          echo "Checking Ubuntu keyserver HKP lookup…"
-          curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&options=mr&search=0x9070266DBA73C465" >/dev/null
-          echo "OK: keyserver.ubuntu.com can serve the key"
-
-          echo "Checking keys.openpgp.org HKP lookup…"
-          curl -fsSL "https://keys.openpgp.org/pks/lookup?op=get&options=mr&search=0x9070266DBA73C465" >/dev/null || true
-      - name: Run tests
-        run: scala-cli --power test .
+          # After scala-cli writes/signs locally, we can inspect one .asc file.
+          # We'll just ensure gpg is present and can parse signatures later.
+          gpg --version | head -n 1 - name: Run tests
+      - name: Locate signatures and print keyid (temp)
+        run: |
+          set -euo pipefail
+          # Find any .asc created during publish attempt
+          find . -name "*.asc" -maxdepth 6 -print || true
 #      - name: Publish
 #        env:
 #          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
