@@ -21,5 +21,5 @@ Made supports case classes, enums, sealed traits, objects, value classes, and hi
 
 Made is inspired by:
 
-- [**AVSystem commons**](https://github.com/AVSystem/scala-commons) by [**ghik**](https://github.com/ghik
+- [**AVSystem commons**](https://github.com/AVSystem/scala-commons) by [**ghik**](https://github.com/ghik)
 - [**ops-mirror**](https://github.com/bishabosha/ops-mirror) by [**bishabosha**](https://github.com/bishabosha)
