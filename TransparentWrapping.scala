@@ -2,8 +2,21 @@ package made
 
 import scala.quoted.*
 
+/**
+ * Bidirectional conversion between a transparent wrapper type `T` and its single wrapped field type `R`.
+ *
+ * Used by [[Made.Transparent]] to implement `wrap` and `unwrap`. Derived at compile time
+ * via `TransparentWrapping.derived[R, T]` for single-field case classes annotated with `@transparent`.
+ *
+ * @tparam R the wrapped field type
+ * @tparam T the transparent wrapper type
+ * @see [[Made.Transparent]]
+ * @see [[made.annotation.transparent]]
+ */
 trait TransparentWrapping[R, T]:
+  /** Wraps a value of the field type into the transparent wrapper type. */
   def wrap(r: R): T
+  /** Extracts the field value from a transparent wrapper instance. */
   def unwrap(t: T): R
 
 object TransparentWrapping:
