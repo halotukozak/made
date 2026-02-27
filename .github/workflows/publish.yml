@@ -16,6 +16,11 @@ jobs:
       - name: Run tests
         run: scala-cli --power test .
       - name: Publish
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          PGP_PRIVATE_KEY: ${{ secrets.PGP_PRIVATE_KEY }}
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         run: |
           scala-cli --power publish . \
             --user "env:SONATYPE_USERNAME" \
