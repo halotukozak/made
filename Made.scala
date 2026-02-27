@@ -2,7 +2,7 @@ package made
 
 import made.annotation.*
 
-import scala.annotation.{implicitNotFound, tailrec, Annotation, RefiningAnnotation}
+import scala.annotation.{implicitNotFound, Annotation}
 import scala.deriving.Mirror
 import scala.quoted.*
 
@@ -79,9 +79,8 @@ object Made:
 
   type LabelOf[l <: String] = MadeElem { type MirroredLabel = l }
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
-  
+
   transparent inline given derived[T]: Of[T] = ${ derivedImpl[T] }
-  
 
   private def derivedImpl[T: Type](using quotes: Quotes): Expr[Made.Of[T]] =
     import quotes.reflect.*
@@ -163,7 +162,7 @@ object Made:
     def defaultOf[E: Type](index: Int, symbol: Symbol): Expr[Option[E]] = Expr.ofOption {
       def fromWhenAbsent = symbol.getAnnotationOf[whenAbsent[?]].map {
         case '{ `whenAbsent`($value: E) } => value
-        case '{ `whenAbsent`($value: e) } =>
+        case '{ `whenAbsent`($_ : e) } =>
           report.error(s"whenAbsent should have value with type ${Type.show[e]}")
           '{ ??? }
       }

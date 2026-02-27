@@ -1,6 +1,5 @@
 package made
 
-import scala.annotation.Annotation
 import scala.quoted.*
 
 extension (comp: Expr.type)

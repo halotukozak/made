@@ -1,6 +1,5 @@
 package made
 
-import made.annotation
 import made.annotation.*
 import scala.deriving.Mirror.Sum
 

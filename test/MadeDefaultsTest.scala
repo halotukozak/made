@@ -1,6 +1,5 @@
 package made
 
-import made.annotation
 import made.annotation.*
 class MadeDefaultsTest extends munit.FunSuite:
   test("case class with defaults") {

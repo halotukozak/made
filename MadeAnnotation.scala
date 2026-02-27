@@ -12,7 +12,7 @@ private def getAnnotationImpl[A <: MetaAnnotation: Type, DM <: Made: Type](using
   import quotes.reflect.*
 
   @tailrec def loop(tpe: TypeRepr): Option[Expr[A]] = tpe match
-    case AnnotatedType(underlying, annot) if annot.tpe <:< TypeRepr.of[A] => Some(annot.asExprOf[A])
+    case AnnotatedType(_, annot) if annot.tpe <:< TypeRepr.of[A] => Some(annot.asExprOf[A])
     case AnnotatedType(underlying, _) => loop(underlying)
     case _ => None
 
@@ -21,7 +21,7 @@ private def hasAnnotationImpl[A <: MetaAnnotation: Type, DM <: Made: Type](using
   import quotes.reflect.*
 
   @tailrec def loop(tpe: TypeRepr): Boolean = tpe match
-    case AnnotatedType(underlying, annot) if annot.tpe <:< TypeRepr.of[A] => true
+    case AnnotatedType(_, annot) if annot.tpe <:< TypeRepr.of[A] => true
     case AnnotatedType(underlying, _) => loop(underlying)
     case _ => false
 

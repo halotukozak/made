@@ -1,7 +1,7 @@
 package made
 
 import scala.quoted.*
-import scala.util.{NotGiven, Try}
+import scala.util.{ Try}
 
 /**
  * Generates a detailed string representation of a symbol during macro expansion.

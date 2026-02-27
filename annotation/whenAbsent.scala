@@ -2,7 +2,6 @@ package made
 
 import scala.annotation.{Annotation, RefiningAnnotation}
 import scala.quoted.*
-import scala.util.matching.Regex
 
 class whenAbsent[+T](v: => T) extends RefiningAnnotation:
   def value: T = v
