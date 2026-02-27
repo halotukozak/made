@@ -4,8 +4,53 @@ import made.annotation.MetaAnnotation
 import scala.annotation.tailrec
 import scala.quoted.*
 
+/**
+ * Extension methods for querying annotation metadata on a [[Made]] mirror instance.
+ *
+ * These methods inspect the `Metadata` type member at compile time, walking the
+ * `AnnotatedType` chain to find annotations of the requested type. Both methods
+ * are inline and resolved entirely at compile time.
+ *
+ * IMPORTANT: These methods work ONLY on [[Made]] instances, NOT on [[MadeElem]].
+ * Element-level metadata is accessible as the `Metadata` type member on each
+ * element but has no convenience query methods.
+ *
+ * ```scala
+ * import made.*
+ * import made.annotation.*
+ *
+ * class JsonName(val value: String) extends MetaAnnotation
+ *
+ * @JsonName("user_record")
+ * case class User(name: String, age: Int)
+ *
+ * val mirror = Made.derived[User]
+ * mirror.hasAnnotation[JsonName]          // true
+ * mirror.getAnnotation[JsonName].get.value // "user_record"
+ * ```
+ *
+ * @see [[made.Made]]
+ * @see [[made.annotation.MetaAnnotation]]
+ * @see [[made.Meta]]
+ */
 extension (m: Made)
+
+  /**
+   * Returns `true` if the mirror's `Metadata` type member contains an annotation of type `A`.
+   *
+   * Transparent inline -- resolved entirely at compile time, no runtime cost.
+   * `A` must extend [[made.annotation.MetaAnnotation]].
+   */
   transparent inline def hasAnnotation[A <: MetaAnnotation]: Boolean = ${ hasAnnotationImpl[A, m.type] }
+
+  /**
+   * Returns `Some(annotation)` if the mirror's `Metadata` type member contains an annotation
+   * of type `A`, `None` otherwise.
+   *
+   * The returned annotation instance provides access to annotation parameters
+   * (e.g., `getAnnotation[JsonName].get.value`). Inline -- resolved at compile time.
+   * `A` must extend [[made.annotation.MetaAnnotation]].
+   */
   inline def getAnnotation[A <: MetaAnnotation]: Option[A] = ${ getAnnotationImpl[A, m.type] }
 
 private def getAnnotationImpl[A <: MetaAnnotation: Type, DM <: Made: Type](using quotes: Quotes): Expr[Option[A]] =
