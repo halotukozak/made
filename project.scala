@@ -1,8 +1,8 @@
-//> using scala 3.8.2
+//> using scala 3.3.7
 //> using test.dep org.scalameta::munit::1.2.3
 
-//> using publish.organization io.github.halotukozak
 //> using publish.name made
+//> using publish.organization io.github.halotukozak
 //> using publish.computeVersion git:tag
 //> using publish.description "Mirror Annotations & Default Extraction"
 //> using publish.url https://github.com/halotukozak/made

@@ -43,3 +43,8 @@ build/
 ### Scala ###
 .bsp/
 .scala-build/
+.scala-doc/
+
+### AI ###
+.claude/
+.planning/.planning/

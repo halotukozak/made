@@ -1,4 +1,4 @@
-name: CI
+name: Run CI
 
 on:
   push:
@@ -21,8 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: VirtusLab/scala-cli-setup@v1
-      - name: Compile
-        run: scala-cli compile --power .
-      - name: Run tests
-        run: scala-cli test --power .
+      - name: Run tests (Scala LTS)
+        run: scala-cli test .
+      - name: Run tests (Scala Next)
+        run: scala-cli test . -S 3.8.2
