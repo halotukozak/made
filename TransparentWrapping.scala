@@ -16,6 +16,7 @@ import scala.quoted.*
 trait TransparentWrapping[R, T]:
   /** Wraps a value of the field type into the transparent wrapper type. */
   def wrap(r: R): T
+
   /** Extracts the field value from a transparent wrapper instance. */
   def unwrap(t: T): R
 
