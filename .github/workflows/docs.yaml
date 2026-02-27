@@ -30,7 +30,15 @@ jobs:
       - name: Setup scala-cli
         uses: VirtusLab/scala-cli-setup@v1.12.3
       - name: Generate documentation
-        run: scala-cli doc .
+        run:
+          scala-cli doc . -- \
+          -project alpaca \
+          -project-version ${{ github.ref_name }} \
+          -project-footer "made with ❤️ and coffee" \
+          -social-links:github::https://github.com/halotukozak/made \
+          -snippet-compiler:compile \
+          -source-links:"src=github://halotukozak/alpaca?tag=${{ github.ref_name }}" \
+          -revision:"${{ github.ref_name }}"
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
