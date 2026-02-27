@@ -6,6 +6,65 @@ import scala.annotation.{implicitNotFound, Annotation}
 import scala.deriving.Mirror
 import scala.quoted.*
 
+/**
+ * Extended mirror for Scala types, providing annotation metadata, element-level detail,
+ * and generated member support beyond standard `scala.deriving.Mirror`.
+ *
+ * A `Made` instance describes the structure of a type `T` at both the type level and runtime.
+ * Unlike the standard library `Mirror`, `Made` carries per-element metadata (annotations,
+ * default values, labels) and supports `@generated` members that compute derived values.
+ *
+ * === Type Members ===
+ *
+ *  - `type MirroredElemTypes` (final, computed) -- tuple of element types,
+ *    extracted from [[MirroredElems]] via type-level mapping
+ *  - `type MirroredElemLabels` (final, computed) -- tuple of element labels,
+ *    extracted from [[MirroredElems]] via type-level mapping
+ *  - `type MirroredType` -- the mirrored type `T`
+ *  - `type MirroredLabel <: String` -- the simple name of `T`
+ *    (or the override provided by `@name`)
+ *  - `type Metadata <: Meta` -- annotation metadata on `T`, represented as an
+ *    `AnnotatedType` chain wrapping the [[Meta]] base type. When no
+ *    `MetaAnnotation` annotations are present, `Metadata = Meta`. When
+ *    annotations are present, `Metadata` becomes `Meta @Ann1 @Ann2 ...`.
+ *    Query at runtime via [[hasAnnotation]] and [[getAnnotation]].
+ *  - `type MirroredElems <: Tuple` -- tuple of [[MadeElem]] subtypes
+ *    representing constructor fields (for products) or subtypes (for sums)
+ *  - `type GeneratedElems <: Tuple` -- tuple of [[GeneratedMadeElem]] for
+ *    members annotated with `@generated`
+ *
+ * === Example ===
+ *
+ * ```scala
+ * import made.*
+ *
+ * case class User(name: String, age: Int)
+ *
+ * val mirror: Made.ProductOf[User] = Made.derived[User]
+ * ```
+ *
+ * Type-level output:
+ * ```scala
+ * // mirror type members:
+ * //   type MirroredType = User
+ * //   type MirroredLabel = "User"
+ * //   type Metadata = Meta
+ * //   type MirroredElems = MadeFieldElem { ... } *: MadeFieldElem { ... } *: EmptyTuple
+ * ```
+ *
+ * Runtime usage:
+ * ```scala
+ * val (nameFld, ageFld) = mirror.mirroredElems
+ * val user = mirror.fromUnsafeArray(Array("Alice", 30))
+ * ```
+ *
+ * @see [[Made.Product]]
+ * @see [[Made.Sum]]
+ * @see [[Made.Singleton]]
+ * @see [[Made.Transparent]]
+ * @see [[MadeElem]]
+ * @see [[Made.derived]]
+ */
 @implicitNotFound("No Made could be generated.\nDiagnose any issues by calling Made.derived directly")
 sealed trait Made:
   final type MirroredElemTypes = Tuple.Map[
@@ -26,33 +85,168 @@ sealed trait Made:
   def mirroredElems: MirroredElems
   def generatedElems: GeneratedElems
 
+/**
+ * Base type for elements within a [[Made]] mirror's `MirroredElems` tuple.
+ *
+ * Each element in the `MirroredElems` tuple is a subtype of `MadeElem`,
+ * carrying the element's type, label, and annotation metadata. The concrete
+ * subtype depends on the mirror kind:
+ *
+ *  - [[MadeFieldElem]] -- constructor parameters in product mirrors
+ *  - [[MadeSubElem]] -- non-singleton subtypes in sum mirrors
+ *  - [[MadeSubSingletonElem]] -- singleton subtypes in sum mirrors
+ *  - [[GeneratedMadeElem]] -- `@generated` members (in `GeneratedElems`)
+ *
+ * === Type Members ===
+ *
+ *  - `type MirroredType` -- the element's type (field type or subtype)
+ *  - `type MirroredLabel <: String` -- the element's label (field name or
+ *    subtype name, or the override provided by `@name`)
+ *  - `type Metadata <: Meta` -- annotation metadata on this element,
+ *    represented as an `AnnotatedType` chain around [[Meta]].
+ *    Element-level metadata is accessible at the type level through this
+ *    type member but has no runtime query convenience methods
+ *    (unlike [[Made]], which has [[hasAnnotation]] and [[getAnnotation]]).
+ *
+ * === Example ===
+ *
+ * ```scala
+ * import made.*
+ *
+ * case class User(name: String, age: Int)
+ *
+ * val mirror = Made.derived[User]
+ * val (nameFld, ageFld) = mirror.mirroredElems
+ * // nameFld: MadeFieldElem { type MirroredType = String; type MirroredLabel = "name" }
+ * // ageFld:  MadeFieldElem { type MirroredType = Int;    type MirroredLabel = "age"  }
+ * ```
+ *
+ * @see [[MadeFieldElem]]
+ * @see [[MadeSubElem]]
+ * @see [[MadeSubSingletonElem]]
+ * @see [[GeneratedMadeElem]]
+ */
 sealed trait MadeElem:
   type MirroredType
   type MirroredLabel <: String
   type Metadata <: Meta
 
+/**
+ * Element representing a constructor parameter in a product type mirror.
+ *
+ * Each entry in [[Made.Product]]'s `MirroredElems` tuple is a `MadeFieldElem`,
+ * providing the field's type, label, metadata, and default value.
+ *
+ * === Default Resolution ===
+ *
+ * The `default` method resolves a default value for this field using the
+ * following priority chain (first match wins):
+ *
+ *  1. `@whenAbsent(value)` -- explicit default from annotation (highest priority)
+ *  2. `@optionalParam` -- uses `OptionLike[T].none` for option-like types
+ *  3. Constructor default -- the Scala-level default parameter value
+ *  4. `None` -- no default available
+ *
+ * @see [[MadeElem]]
+ * @see [[MadeSubElem]]
+ * @see [[GeneratedMadeElem]]
+ * @see [[Made.Product]]
+ */
 sealed trait MadeFieldElem extends MadeElem:
   def default: Option[MirroredType]
 
+/**
+ * Companion for [[MadeFieldElem]].
+ *
+ *  - `type Of[T]` -- convenience alias for the structural refinement
+ *    `MadeFieldElem { type MirroredType = T }`, used in type-level matching
+ */
 object MadeFieldElem:
   type Of[T] = MadeFieldElem { type MirroredType = T }
 
+/**
+ * Element representing a non-singleton subtype in a sum type mirror.
+ *
+ * Used in [[Made.Sum]]'s `MirroredElems` for subtypes that are not
+ * singleton types (e.g., case classes with parameters). For singleton
+ * subtypes (case objects, parameterless enum cases), see
+ * [[MadeSubSingletonElem]].
+ *
+ * @see [[MadeElem]]
+ * @see [[MadeFieldElem]]
+ * @see [[MadeSubSingletonElem]]
+ * @see [[Made.Sum]]
+ */
 sealed trait MadeSubElem extends MadeElem
+
+/**
+ * Companion for [[MadeSubElem]].
+ *
+ *  - `type Of[T]` -- convenience alias for the structural refinement
+ *    `MadeSubElem { type MirroredType = T }`
+ */
 object MadeSubElem:
   type Of[T] = MadeSubElem { type MirroredType = T }
 
+/**
+ * Element representing a singleton subtype in a sum type mirror.
+ *
+ * Extends [[MadeSubElem]]. Used in [[Made.Sum]]'s `MirroredElems` for
+ * case objects and parameterless enum cases. Provides access to the
+ * singleton instance via the `value` method.
+ *
+ * @see [[MadeSubElem]]
+ * @see [[Made.Sum]]
+ * @see [[Made.Singleton]]
+ */
 sealed trait MadeSubSingletonElem extends MadeSubElem:
   def value: MirroredType
 
+/**
+ * Companion for [[MadeSubSingletonElem]].
+ *
+ *  - `type Of[T]` -- convenience alias for the structural refinement
+ *    `MadeSubSingletonElem { type MirroredType = T }`
+ */
 object MadeSubSingletonElem:
   type Of[T] = MadeSubSingletonElem { type MirroredType = T }
 
+/**
+ * Element representing a `@generated` val or def.
+ *
+ * Extends [[MadeFieldElem]]. Lives in [[Made]]'s `GeneratedElems` tuple
+ * (separate from `MirroredElems`). A generated element computes a derived
+ * value from an instance of the outer type.
+ *
+ * === Type Members ===
+ *
+ *  - `type OuterMirroredType` -- the type that declares the `@generated` member
+ *
+ * === Methods ===
+ *
+ *  - `def apply(outer: OuterMirroredType): MirroredType` -- computes the
+ *    generated value from an instance of the declaring type
+ *  - `def default: Option[MirroredType]` -- always `None`; generated
+ *    members have no constructor defaults
+ *
+ * @see [[MadeFieldElem]]
+ * @see [[MadeElem]]
+ * @see [[made.annotation.generated]]
+ */
 sealed trait GeneratedMadeElem extends MadeFieldElem:
   type OuterMirroredType
   def apply(outer: OuterMirroredType): MirroredType
 
   final def default: Option[MirroredType] = None
 
+/**
+ * Companion for [[GeneratedMadeElem]].
+ *
+ *  - `type Of[T]` -- convenience alias for the structural refinement
+ *    `GeneratedMadeElem { type MirroredType = T }`
+ *  - `type OuterOf[Outer]` -- convenience alias for the structural refinement
+ *    `GeneratedMadeElem { type OuterMirroredType = Outer }`
+ */
 object GeneratedMadeElem:
   type Of[T] = GeneratedMadeElem { type MirroredType = T }
 
@@ -63,13 +257,41 @@ sealed trait GeneratedMadeElemWorkaround[Outer, Elem] extends GeneratedMadeElem:
   final type OuterMirroredType = Outer
   final type MirroredType = Elem
 
+/**
+ * Companion for [[MadeElem]].
+ *
+ *  - `type Of[T]` -- convenience alias for `MadeElem { type MirroredType = T }`
+ *  - `type LabelOf[l <: String]` -- convenience alias for
+ *    `MadeElem { type MirroredLabel = l }`
+ *  - `type MetaOf[m <: Meta]` -- convenience alias for
+ *    `MadeElem { type Metadata = m }`
+ */
 object MadeElem:
   type Of[T] = MadeElem { type MirroredType = T }
   type LabelOf[l <: String] = MadeElem { type MirroredLabel = l }
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
 
+/** Base type for the `Metadata` type member when no annotations are present. */
 private trait Meta
 
+/**
+ * Companion object and namespace for [[Made]].
+ *
+ * Contains type aliases for refined mirror types, the `derived` given for
+ * compile-time mirror derivation, and the mirror subtype traits
+ * ([[Product]], [[Sum]], [[Singleton]], [[Transparent]]).
+ *
+ * === Type Aliases ===
+ *
+ *  - `type Of[T]` -- [[Made]] refined with `MirroredType = T`
+ *  - `type ProductOf[T]` -- [[Made.Product]] refined with `MirroredType = T`
+ *  - `type SumOf[T]` -- [[Made.Sum]] refined with `MirroredType = T`
+ *  - `type SingletonOf[T]` -- [[Made.Singleton]] refined with `MirroredType = T`
+ *  - `type TransparentOf[T, U]` -- [[Made.Transparent]] refined with both
+ *    `MirroredType = T` and `MirroredElemType = U`
+ *  - `type LabelOf[l <: String]` -- [[MadeElem]] refined with `MirroredLabel = l`
+ *  - `type MetaOf[m <: Meta]` -- [[MadeElem]] refined with `Metadata = m`
+ */
 object Made:
   type Of[T] = Made { type MirroredType = T }
   type ProductOf[T] = Made.Product { type MirroredType = T }
@@ -80,6 +302,28 @@ object Made:
   type LabelOf[l <: String] = MadeElem { type MirroredLabel = l }
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
 
+  /**
+   * Derives a [[Made]] mirror for `T` at compile time.
+   *
+   * The concrete subtype of the returned mirror is determined by the
+   * following derivation priority (first match wins):
+   *
+   *  1. [[Singleton]] -- `T` is an object, `Unit`, or a singleton type
+   *  2. [[Transparent]] -- `T` is annotated with `@transparent`
+   *     (must have exactly one constructor field; `@generated` members
+   *     are not allowed)
+   *  3. [[Product]] -- `T` is a value class (extends `AnyVal`)
+   *  4. [[Product]] -- `T` has a `Mirror.ProductOf[T]` (case classes)
+   *  5. [[Sum]] -- `T` has a `Mirror.SumOf[T]` (sealed traits, enums)
+   *
+   * The return type is `Made.Of[T]` but the actual runtime type is the
+   * more specific subtype listed above.
+   *
+   * @see [[Made.Product]]
+   * @see [[Made.Sum]]
+   * @see [[Made.Singleton]]
+   * @see [[Made.Transparent]]
+   */
   transparent inline given derived[T]: Of[T] = ${ derivedImpl[T] }
 
   private def derivedImpl[T: Type](using quotes: Quotes): Expr[Made.Of[T]] =
@@ -420,14 +664,86 @@ object Made:
           report.errorAndAbort(s"Unsupported Mirror type for ${tTpe.show}")
         }
 
+  /**
+   * Mirror for product types (case classes and value classes).
+   *
+   * Produced by [[Made.derived]] when `T` is a case class, a zero-field
+   * case class, or a value class (extends `AnyVal`).
+   *
+   * `MirroredElems` is a tuple of [[MadeFieldElem]] representing each
+   * constructor parameter. `GeneratedElems` is a tuple of
+   * [[GeneratedMadeElem]] for any `@generated` members.
+   *
+   * @see [[Made]]
+   * @see [[Made.Sum]]
+   * @see [[Made.Singleton]]
+   * @see [[Made.Transparent]]
+   * @see [[MadeFieldElem]]
+   * @see [[GeneratedMadeElem]]
+   */
   sealed trait Product extends Made:
     def fromUnsafeArray(product: Array[Any]): MirroredType
+
+  /**
+   * Mirror for sum types (sealed traits and enums).
+   *
+   * Produced by [[Made.derived]] when `T` is a sealed trait or enum.
+   *
+   * `MirroredElems` is a tuple of [[MadeSubElem]] and
+   * [[MadeSubSingletonElem]] representing the subtypes.
+   *
+   * @see [[Made]]
+   * @see [[Made.Product]]
+   * @see [[Made.Singleton]]
+   * @see [[MadeSubElem]]
+   * @see [[MadeSubSingletonElem]]
+   */
   sealed trait Sum extends Made
+
+  /**
+   * Mirror for singleton types (objects and Unit).
+   *
+   * Produced by [[Made.derived]] when `T` is an object, `Unit`, or a
+   * singleton type.
+   *
+   * `MirroredElems` is fixed to `EmptyTuple` since singletons have no
+   * elements. The singleton instance is available via `value`.
+   *
+   * @see [[Made]]
+   * @see [[Made.Sum]]
+   * @see [[Made.Product]]
+   */
   sealed trait Singleton extends Made:
     final type MirroredElems = EmptyTuple
     def value: MirroredType
     final def mirroredElems: MirroredElems = EmptyTuple
 
+  /**
+   * Mirror for transparent wrapper types (single-field case classes
+   * annotated with `@transparent`).
+   *
+   * Produced by [[Made.derived]] when `T` is a case class annotated
+   * with `@transparent` having exactly one constructor field.
+   * `@generated` members are not supported on transparent types and
+   * will cause a compile error.
+   *
+   * === Type Members ===
+   *
+   *  - `type MirroredElemType` -- the single wrapped element's type
+   *  - `type GeneratedElems = EmptyTuple` (final) -- `@generated`
+   *    members not supported
+   *
+   * === Methods ===
+   *
+   *  - `def unwrap(value: MirroredType): MirroredElemType` -- extracts
+   *    the wrapped value
+   *  - `def wrap(value: MirroredElemType): MirroredType` -- wraps a
+   *    value into the transparent type
+   *
+   * @see [[Made]]
+   * @see [[Made.Product]]
+   * @see [[TransparentWrapping]]
+   */
   sealed trait Transparent extends Made:
     final type GeneratedElems = EmptyTuple
     type MirroredElemType
