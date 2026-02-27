@@ -1,4 +1,4 @@
-# Made
+# M&DE
 
 **Mirror Annotations & Default Extraction** — a Scala 3 macro library that extends `scala.deriving.Mirror` with
 annotation metadata, default values, generated members, and transparent wrapper support.
@@ -6,7 +6,7 @@ annotation metadata, default values, generated members, and transparent wrapper 
 ## Overview
 
 Scala 3's built-in `Mirror` provides basic type-level information about case classes and enums, but it stops short of
-exposing annotations, default values, or computed members. **Made** fills that gap — it derives enriched mirrors at
+exposing annotations, default values, or computed members. M&DE fills that gap — it derives enriched mirrors at
 compile time that carry:
 
 - **Type-level annotation metadata** — custom annotations on types and fields, queryable at both type level and runtime
@@ -19,7 +19,7 @@ Made supports case classes, enums, sealed traits, objects, value classes, and hi
 
 ## Acknowledgements
 
-Made is inspired by:
+M&DE is inspired by:
 
 - [**AVSystem commons**](https://github.com/AVSystem/scala-commons) by [**ghik**](https://github.com/ghik)
 - [**ops-mirror**](https://github.com/bishabosha/ops-mirror) by [**bishabosha**](https://github.com/bishabosha)
