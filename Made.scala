@@ -160,12 +160,14 @@ object Made:
           }
 
     def defaultOf[E: Type](index: Int, symbol: Symbol): Expr[Option[E]] = Expr.ofOption {
-      def fromWhenAbsent = symbol.getAnnotationOf[whenAbsent[?]].map {
-        case '{ `whenAbsent`($value: E) } => value
-        case '{ `whenAbsent`($_ : e) } =>
-          report.error(s"whenAbsent should have value with type ${Type.show[e]}")
-          '{ ??? }
-      }
+      def fromWhenAbsent = symbol
+        .getAnnotationOf[whenAbsent[?]]
+        .map:
+          case '{ `whenAbsent`($value: E) } => value
+          case '{ `whenAbsent`($_ : e) } =>
+            report.error(s"whenAbsent should have value with type ${Type.show[e]}")
+            '{ ??? }
+
       def fromOptionalParam = Option.when(symbol.hasAnnotationOf[optionalParam]) {
         Expr.summon[OptionLike[E]] match
           case Some(impl) => '{ $impl.none }
@@ -173,11 +175,11 @@ object Made:
             report.error(s"optionalParam should be used only for types with OptionLike defined")
             '{ ??? }
       }
-      def fromDefaultValue = tSymbol.companionModule.methodMembers.collectFirst {
+      def fromDefaultValue = tSymbol.companionModule.methodMembers.collectFirst:
         case m if m.name.startsWith("$lessinit$greater$default$" + (index + 1)) =>
           // todo: generics
           Ref(m).asExprOf[E]
-      }
+
       fromWhenAbsent orElse fromOptionalParam orElse fromDefaultValue
     }
 
@@ -314,7 +316,7 @@ object Made:
             val elems = Expr.ofTupleFromSeq(
               tSymbol.caseFields.zipWithIndex
                 .zip(traverseTuple(Type.of[mirroredElemTypes]))
-                .map {
+                .map:
                   case ((fieldSymbol, index), '[fieldTpe]) =>
                     (labelTypeOf(fieldSymbol, fieldSymbol.name), metaTypeOf(fieldSymbol)).runtimeChecked match
                       case ('[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
@@ -326,8 +328,7 @@ object Made:
 
                             def default = ${ defaultOf[fieldTpe](index, fieldSymbol) }
                         }
-                  case (_, _) => wontHappen
-                },
+                  case (_, _) => wontHappen,
             )
 
             elems match
@@ -364,30 +365,30 @@ object Made:
                 }
               } =>
 
-            val elems = Expr.ofTupleFromSeq(traverseTuple(Type.of[mirroredElemTypes]).map { case '[subType] =>
-              val subType = TypeRepr.of[subType]
-              val subSymbol = if subType.termSymbol.isNoSymbol then subType.typeSymbol else subType.termSymbol
+            val elems = Expr.ofTupleFromSeq(traverseTuple(Type.of[mirroredElemTypes]).map:
+              case '[subType] =>
+                val subType = TypeRepr.of[subType]
+                val subSymbol = if subType.termSymbol.isNoSymbol then subType.typeSymbol else subType.termSymbol
 
-              (labelTypeOf(subSymbol, subSymbol.name), metaTypeOf(subSymbol)).runtimeChecked match
-                case ('[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
-                  Type.of[subType] match
-                    case '[type s <: scala.Singleton; s] =>
-                      '{
-                        new MadeSubSingletonElem:
-                          type MirroredType = s
-                          type MirroredLabel = elemLabel
-                          type Metadata = meta
+                (labelTypeOf(subSymbol, subSymbol.name), metaTypeOf(subSymbol)).runtimeChecked match
+                  case ('[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
+                    Type.of[subType] match
+                      case '[type s <: scala.Singleton; s] =>
+                        '{
+                          new MadeSubSingletonElem:
+                            type MirroredType = s
+                            type MirroredLabel = elemLabel
+                            type Metadata = meta
 
-                          def value: s = singleValueOf[s]
-                      }
-                    case '[s] =>
-                      '{
-                        new MadeSubElem:
-                          type MirroredType = subType
-                          type MirroredLabel = elemLabel
-                          type Metadata = meta
-                      }
-            })
+                            def value: s = singleValueOf[s]
+                        }
+                      case '[s] =>
+                        '{
+                          new MadeSubElem:
+                            type MirroredType = subType
+                            type MirroredLabel = elemLabel
+                            type Metadata = meta
+                        })
 
             elems match
               case '{

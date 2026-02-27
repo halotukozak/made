@@ -26,10 +26,9 @@ private[made] def stringToType(str: String)(using quotes: Quotes): Type[? <: Str
 
 private[made] def traverseTypes(tpes: List[Type[? <: AnyKind]])(using Quotes): Type[? <: Tuple] =
   val empty: Type[? <: Tuple] = Type.of[EmptyTuple]
-  tpes.foldRight(empty) {
+  tpes.foldRight(empty):
     case ('[tpe], '[type acc <: Tuple; acc]) => Type.of[tpe *: acc]
     case (_, _) => wontHappen
-  }
 
 private[made] def traverseTuple(tpe: Type[? <: Tuple])(using quotes: Quotes): List[Type[? <: AnyKind]] = tpe match
   case '[EmptyTuple] => Nil

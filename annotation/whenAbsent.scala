@@ -23,9 +23,9 @@ object whenAbsent:
                 case "$lessinit$greater" =>
                   ms.owner.companionModule.companionClass.primaryConstructor
                 case name =>
-                  ms.owner.methodMember(name).headOption.getOrElse {
-                    report.errorAndAbort(s"whenAbsent.value macro could not find method '$name' in ${ms.owner.fullName}")
-                  }
+                  ms.owner.methodMember(name).headOption getOrElse report.errorAndAbort(
+                    s"whenAbsent.value macro could not find method '$name' in ${ms.owner.fullName}",
+                  )
 
               method.paramSymss.flatten.lift(idx.toInt - 1)
             case _ => None
