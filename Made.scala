@@ -14,25 +14,6 @@ import scala.quoted.*
  * Unlike the standard library `Mirror`, `Made` carries per-element metadata (annotations,
  * default values, labels) and supports `@generated` members that compute derived values.
  *
- * === Type Members ===
- *
- *  - `type MirroredElemTypes` (final, computed) -- tuple of element types,
- *    extracted from [[MirroredElems]] via type-level mapping
- *  - `type MirroredElemLabels` (final, computed) -- tuple of element labels,
- *    extracted from [[MirroredElems]] via type-level mapping
- *  - `type MirroredType` -- the mirrored type `T`
- *  - `type MirroredLabel <: String` -- the simple name of `T`
- *    (or the override provided by `@name`)
- *  - `type Metadata <: Meta` -- annotation metadata on `T`, represented as an
- *    `AnnotatedType` chain wrapping the [[Meta]] base type. When no
- *    `MetaAnnotation` annotations are present, `Metadata = Meta`. When
- *    annotations are present, `Metadata` becomes `Meta @Ann1 @Ann2 ...`.
- *    Query at runtime via [[hasAnnotation]] and [[getAnnotation]].
- *  - `type MirroredElems <: Tuple` -- tuple of [[MadeElem]] subtypes
- *    representing constructor fields (for products) or subtypes (for sums)
- *  - `type GeneratedElems <: Tuple` -- tuple of [[GeneratedMadeElem]] for
- *    members annotated with `@generated`
- *
  * === Example ===
  *
  * ```scala sc:nocompile
@@ -67,20 +48,32 @@ import scala.quoted.*
  */
 @implicitNotFound("No Made could be generated.\nDiagnose any issues by calling Made.derived directly")
 sealed trait Made:
+  /** Tuple of element types, extracted from [[MirroredElems]] via type-level mapping. */
   final type MirroredElemTypes = Tuple.Map[
     MirroredElems,
     [E] =>> E match
       case MadeElem.Of[t] => t,
   ]
+  /** Tuple of element labels, extracted from [[MirroredElems]] via type-level mapping. */
   final type MirroredElemLabels = Tuple.Map[
     MirroredElems,
     [E] =>> E match
       case MadeElem.LabelOf[l] => l,
   ]
+  /** The mirrored type `T`. */
   type MirroredType
+  /** The simple name of `T` (or the override provided by `@name`). */
   type MirroredLabel <: String
+  /**
+   * Annotation metadata on `T`, represented as an `AnnotatedType` chain wrapping the [[Meta]]
+   * base type. When no `MetaAnnotation` annotations are present, `Metadata = Meta`. When
+   * annotations are present, `Metadata` becomes `Meta @Ann1 @Ann2 ...`.
+   * Query at runtime via [[hasAnnotation]] and [[getAnnotation]].
+   */
   type Metadata <: Meta
+  /** Tuple of [[MadeElem]] subtypes representing constructor fields (for products) or subtypes (for sums). */
   type MirroredElems <: Tuple
+  /** Tuple of [[GeneratedMadeElem]] for members annotated with `@generated`. */
   type GeneratedElems <: Tuple
   def mirroredElems: MirroredElems
   def generatedElems: GeneratedElems
@@ -96,17 +89,6 @@ sealed trait Made:
  *  - [[MadeSubElem]] -- non-singleton subtypes in sum mirrors
  *  - [[MadeSubSingletonElem]] -- singleton subtypes in sum mirrors
  *  - [[GeneratedMadeElem]] -- `@generated` members (in `GeneratedElems`)
- *
- * === Type Members ===
- *
- *  - `type MirroredType` -- the element's type (field type or subtype)
- *  - `type MirroredLabel <: String` -- the element's label (field name or
- *    subtype name, or the override provided by `@name`)
- *  - `type Metadata <: Meta` -- annotation metadata on this element,
- *    represented as an `AnnotatedType` chain around [[Meta]].
- *    Element-level metadata is accessible at the type level through this
- *    type member but has no runtime query convenience methods
- *    (unlike [[Made]], which has [[hasAnnotation]] and [[getAnnotation]]).
  *
  * === Example ===
  *
@@ -127,8 +109,15 @@ sealed trait Made:
  * @see [[GeneratedMadeElem]]
  */
 sealed trait MadeElem:
+  /** The element's type (field type or subtype). */
   type MirroredType
+  /** The element's label (field name or subtype name, or the override provided by `@name`). */
   type MirroredLabel <: String
+  /**
+   * Annotation metadata on this element, represented as an `AnnotatedType` chain around [[Meta]].
+   * Accessible at the type level but has no runtime query convenience methods
+   * (unlike [[Made]], which has [[hasAnnotation]] and [[getAnnotation]]).
+   */
   type Metadata <: Meta
 
 /**
@@ -143,7 +132,7 @@ sealed trait MadeElem:
  * following priority chain (first match wins):
  *
  *  1. `@whenAbsent(value)` -- explicit default from annotation (highest priority)
- *  2. `@optionalParam` -- uses `OptionLike[T].none` for option-like types
+ *  2. `@optionalParam` -- uses `Default[T]` for option-like types
  *  3. Constructor default -- the Scala-level default parameter value
  *  4. `None` -- no default available
  *
@@ -203,25 +192,17 @@ object MadeSubSingletonElem:
  * (separate from `MirroredElems`). A generated element computes a derived
  * value from an instance of the outer type.
  *
- * === Type Members ===
- *
- *  - `type OuterMirroredType` -- the type that declares the `@generated` member
- *
- * === Methods ===
- *
- *  - `def apply(outer: OuterMirroredType): MirroredType` -- computes the
- *    generated value from an instance of the declaring type
- *  - `def default: Option[MirroredType]` -- always `None`; generated
- *    members have no constructor defaults
- *
  * @see [[MadeFieldElem]]
  * @see [[MadeElem]]
  * @see [[made.annotation.generated]]
  */
 sealed trait GeneratedMadeElem extends MadeFieldElem:
+  /** The type that declares the `@generated` member. */
   type OuterMirroredType
+  /** Computes the generated value from an instance of the declaring type. */
   def apply(outer: OuterMirroredType): MirroredType
 
+  /** Always `None`; generated members have no constructor defaults. */
   final def default: Option[MirroredType] = None
 
 object GeneratedMadeElem:
@@ -375,10 +356,10 @@ object Made:
             '{ ??? }
 
       def fromOptionalParam = Option.when(symbol.hasAnnotationOf[optionalParam]) {
-        Expr.summon[OptionLike[E]] match
-          case Some(impl) => '{ $impl.none }
+        Expr.summon[Default[E]] match
+          case Some(impl) => '{ $impl() }
           case None =>
-            report.error(s"optionalParam should be used only for types with OptionLike defined")
+            report.error(s"optionalParam should be used only for types with Default defined")
             '{ ??? }
       }
       def fromDefaultValue = tSymbol.companionModule.methodMembers.collectFirst:
@@ -689,28 +670,19 @@ object Made:
    * `@generated` members are not supported on transparent types and
    * will cause a compile error.
    *
-   * === Type Members ===
-   *
-   *  - `type MirroredElemType` -- the single wrapped element's type
-   *  - `type GeneratedElems = EmptyTuple` (final) -- `@generated`
-   *    members not supported
-   *
-   * === Methods ===
-   *
-   *  - `def unwrap(value: MirroredType): MirroredElemType` -- extracts
-   *    the wrapped value
-   *  - `def wrap(value: MirroredElemType): MirroredType` -- wraps a
-   *    value into the transparent type
-   *
    * @see [[Made]]
    * @see [[Made.Product]]
    * @see [[TransparentWrapping]]
    */
   sealed trait Transparent extends Made:
+    /** `@generated` members are not supported on transparent types. */
     final type GeneratedElems = EmptyTuple
+    /** The single wrapped element's type. */
     type MirroredElemType
     type MirroredElems <: MadeElem.Of[MirroredElemType] *: EmptyTuple
+    /** Extracts the wrapped value. */
     def unwrap(value: MirroredType): MirroredElemType
+    /** Wraps a value into the transparent type. */
     def wrap(value: MirroredElemType): MirroredType
     final def generatedElems: GeneratedElems = EmptyTuple
 

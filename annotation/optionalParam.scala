@@ -7,7 +7,7 @@ package made.annotation
  * scope. In the default resolution priority chain:
  * `@whenAbsent` > `@optionalParam` > constructor default.
  *
- * @see [[made.OptionLike]]
+ * @see [[made.Default]]
  * @see [[whenAbsent]]
  * @see [[MetaAnnotation]]
  */

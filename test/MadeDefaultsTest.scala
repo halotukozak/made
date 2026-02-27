@@ -149,14 +149,8 @@ class MadeDefaultsTest extends munit.FunSuite:
     assertEquals(b.default, Some(None))
   }
 
-  test("@optionalParam with custom OptionLike") {
-    given OptionLike[CustomOpt[String]] with
-      override type Value = String
-      def none: CustomOpt[String] = CustomOpt("none")
-      def some(v: String): CustomOpt[String] = CustomOpt(v)
-      def isDefined(o: CustomOpt[String]): Boolean = o.value != "none"
-      def get(o: CustomOpt[String]): String = o.value
-      val ignoreNulls = false
+  test("@optionalParam with custom Default") {
+    given Default[CustomOpt[String]] = () => CustomOpt("none")
 
     val m = Made.derived[WithCustomOptional]
     val x *: EmptyTuple = m.mirroredElems
