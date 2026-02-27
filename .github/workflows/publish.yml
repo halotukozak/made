@@ -20,4 +20,5 @@ jobs:
           scala-cli --power publish . \
             --user "env:SONATYPE_USERNAME" \
             --password "env:SONATYPE_PASSWORD" \
-            --gpg-key ${{ secrets.PUBLISH_GPG_KEY }} --gpg-option --pinentry-mode --gpg-option loopback
+            --secret-key "env:PGP_PRIVATE_KEY" \
+            --secret-key-password "env:PGP_PASSPHRASE"
