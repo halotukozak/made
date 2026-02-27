@@ -1,4 +1,4 @@
-package made
+package made.annotation
 
 import scala.annotation.{Annotation, RefiningAnnotation}
 import scala.quoted.*
@@ -35,8 +35,7 @@ object whenAbsent:
       case DefaultValueMethod(paramSymbol) => paramSymbol
       case other => other
 
-    // maybe typeRef.typeSymbol can be removed
-    owner.typeRef.typeSymbol.getAnnotation(TypeRepr.of[whenAbsent[T]].typeSymbol) match
+    owner.getAnnotation(TypeRepr.of[whenAbsent[T]].typeSymbol) match
       case Some(annot) => '{ (${ annot.asExprOf[whenAbsent[T]] }).value }
       case _ =>
         report.error("whenAbsent.value can only be used inside a parameter annotated with @whenAbsent")
