@@ -14,7 +14,7 @@ jobs:
           fetch-depth: 0
       - uses: VirtusLab/scala-cli-setup@v1.12.3
       - name: Run tests
-        run: scala-cli test .
+        run: scala-cli --power test .
       - name: Publish
         run: |
           scala-cli --power publish . \

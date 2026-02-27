@@ -32,7 +32,7 @@ jobs:
         uses: VirtusLab/scala-cli-setup@v1.12.3
       - name: Generate documentation
         run:
-          scala-cli doc . -- \
+          scala-cli --power doc . -- \
           -project M&DE \
           -project-version ${{ github.ref_name }} \
           -project-footer "made with ❤️ and coffee" \
