@@ -24,13 +24,6 @@ import scala.quoted.*
 class whenAbsent[+T](v: => T) extends RefiningAnnotation:
   def value: T = v
 
-/**
- * Companion for [[whenAbsent]].
- *
- * Provides the `value[T]` macro that bridges annotation values to
- * constructor defaults. Used internally by the Made derivation to
- * extract the `@whenAbsent` value at compile time.
- */
 object whenAbsent:
   inline def value[T]: T = ${ valueImpl[T] }
 
