@@ -54,16 +54,20 @@ sealed trait Made:
     [E] =>> E match
       case MadeElem.Of[t] => t,
   ]
+
   /** Tuple of element labels, extracted from [[MirroredElems]] via type-level mapping. */
   final type MirroredElemLabels = Tuple.Map[
     MirroredElems,
     [E] =>> E match
       case MadeElem.LabelOf[l] => l,
   ]
+
   /** The mirrored type `T`. */
   type MirroredType
+
   /** The simple name of `T` (or the override provided by `@name`). */
   type MirroredLabel <: String
+
   /**
    * Annotation metadata on `T`, represented as an `AnnotatedType` chain wrapping the [[Meta]]
    * base type. When no `MetaAnnotation` annotations are present, `Metadata = Meta`. When
@@ -71,8 +75,10 @@ sealed trait Made:
    * Query at runtime via [[hasAnnotation]] and [[getAnnotation]].
    */
   type Metadata <: Meta
+
   /** Tuple of [[MadeElem]] subtypes representing constructor fields (for products) or subtypes (for sums). */
   type MirroredElems <: Tuple
+
   /** Tuple of [[GeneratedMadeElem]] for members annotated with `@generated`. */
   type GeneratedElems <: Tuple
   def mirroredElems: MirroredElems
@@ -111,8 +117,10 @@ sealed trait Made:
 sealed trait MadeElem:
   /** The element's type (field type or subtype). */
   type MirroredType
+
   /** The element's label (field name or subtype name, or the override provided by `@name`). */
   type MirroredLabel <: String
+
   /**
    * Annotation metadata on this element, represented as an `AnnotatedType` chain around [[Meta]].
    * Accessible at the type level but has no runtime query convenience methods
@@ -199,6 +207,7 @@ object MadeSubSingletonElem:
 sealed trait GeneratedMadeElem extends MadeFieldElem:
   /** The type that declares the `@generated` member. */
   type OuterMirroredType
+
   /** Computes the generated value from an instance of the declaring type. */
   def apply(outer: OuterMirroredType): MirroredType
 
@@ -220,8 +229,10 @@ sealed trait GeneratedMadeElemWorkaround[Outer, Elem] extends GeneratedMadeElem:
 object MadeElem:
   /** Convenience alias for `MadeElem { type MirroredType = T }`. */
   type Of[T] = MadeElem { type MirroredType = T }
+
   /** Convenience alias for `MadeElem { type MirroredLabel = l }`. */
   type LabelOf[l <: String] = MadeElem { type MirroredLabel = l }
+
   /** Convenience alias for `MadeElem { type Metadata = m }`. */
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
 
@@ -231,17 +242,22 @@ private trait Meta
 object Made:
   /** [[Made]] refined with `MirroredType = T`. */
   type Of[T] = Made { type MirroredType = T }
+
   /** [[Made.Product]] refined with `MirroredType = T`. */
   type ProductOf[T] = Made.Product { type MirroredType = T }
+
   /** [[Made.Sum]] refined with `MirroredType = T`. */
   type SumOf[T] = Made.Sum { type MirroredType = T }
+
   /** [[Made.Singleton]] refined with `MirroredType = T`. */
   type SingletonOf[T] = Made.Singleton { type MirroredType = T }
+
   /** [[Made.Transparent]] refined with `MirroredType = T` and `MirroredElemType = U`. */
   type TransparentOf[T, U] = Made.Transparent { type MirroredType = T; type MirroredElemType = U }
 
   /** [[MadeElem]] refined with `MirroredLabel = l`. */
   type LabelOf[l <: String] = MadeElem { type MirroredLabel = l }
+
   /** [[MadeElem]] refined with `Metadata = m`. */
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
 
@@ -677,11 +693,14 @@ object Made:
   sealed trait Transparent extends Made:
     /** `@generated` members are not supported on transparent types. */
     final type GeneratedElems = EmptyTuple
+
     /** The single wrapped element's type. */
     type MirroredElemType
     type MirroredElems <: MadeElem.Of[MirroredElemType] *: EmptyTuple
+
     /** Extracts the wrapped value. */
     def unwrap(value: MirroredType): MirroredElemType
+
     /** Wraps a value into the transparent type. */
     def wrap(value: MirroredElemType): MirroredType
     final def generatedElems: GeneratedElems = EmptyTuple

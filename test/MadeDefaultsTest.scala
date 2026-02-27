@@ -172,12 +172,12 @@ case class MixedWhenAbsent(a: Int, @whenAbsent(99) b: Int, c: String = "scalaDef
 case class WithOptionalParam(
   @optionalParam x: Option[Int],
   @optionalParam y: String | Null,
-  z: Option[String]
+  z: Option[String],
 )
 
 case class OptionalParamPriority(
   @whenAbsent(Some(42)) @optionalParam a: Option[Int],
-  @optionalParam b: Option[Int] = Some(1)
+  @optionalParam b: Option[Int] = Some(1),
 )
 
 case class CustomOpt[A](value: A)
