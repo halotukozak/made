@@ -10,10 +10,6 @@ import scala.quoted.*
  * The value is by-name (`=> T`) so it is evaluated lazily each time
  * `default` is called on the corresponding [[made.MadeFieldElem]].
  *
- * NOTE: extends `RefiningAnnotation` directly, NOT [[MetaAnnotation]].
- * This means `@whenAbsent` is NOT captured in the `Metadata` type
- * member and cannot be queried via `hasAnnotation` or `getAnnotation`.
- *
  * Priority chain: `@whenAbsent` > `@optionalParam` > constructor default.
  *
  * @tparam T the type of the default value
@@ -21,7 +17,7 @@ import scala.quoted.*
  * @see [[made.MadeFieldElem]]
  * @see [[optionalParam]]
  */
-class whenAbsent[+T](v: => T) extends RefiningAnnotation:
+class whenAbsent[+T](v: => T) extends MetaAnnotation:
   def value: T = v
 
 object whenAbsent:
