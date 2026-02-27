@@ -28,3 +28,5 @@ jobs:
 #        run: scala-cli test .
       - name: Run tests (Scala Next)
         run: scala-cli test . -S 3.8.2
+      - name: Test documentation
+        run: scala-cli doc .
