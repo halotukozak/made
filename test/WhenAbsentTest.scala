@@ -2,7 +2,7 @@ package made
 
 import made.annotation.whenAbsent
 
-class WhenAbsentTest extends munit.FunSuite {
+class WhenAbsentTest extends munit.FunSuite:
   test("whenAbsent.value macro") {
     case class Test(@whenAbsent(42) foo: Int = whenAbsent.value)
     val t = Test()
@@ -24,9 +24,7 @@ class WhenAbsentTest extends munit.FunSuite {
   }
 
   test("whenAbsent.value macro for method") {
-    object Test{
+    object Test:
       def method(@whenAbsent(100) foo: Int = whenAbsent.value): Int = foo
-    }
     assert(Test.method() == 100)
   }
-}
