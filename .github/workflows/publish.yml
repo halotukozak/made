@@ -1,0 +1,25 @@
+name: Publish
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: VirtusLab/scala-cli-setup@v1.12.3
+      - name: Run tests
+        run: scala-cli test .
+      - name: Publish
+        run: |
+          scala-cli --power publish . \
+            --user "${{ secrets.SONATYPE_USERNAME }}" \
+            --password "${{ secrets.SONATYPE_PASSWORD }}" \
+            --secret-key "${{ secrets.PUBLISH_GPG_KEY }}" \
+            --secret-key-password "${{ secrets.PUBLISH_GPG_PASSPHRASE }}"
+            --checks:all
