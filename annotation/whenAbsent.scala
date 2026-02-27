@@ -3,9 +3,34 @@ package made.annotation
 import scala.annotation.{Annotation, RefiningAnnotation}
 import scala.quoted.*
 
+/**
+ * Provides an explicit default value for a constructor parameter with
+ * highest priority in the default resolution chain.
+ *
+ * The value is by-name (`=> T`) so it is evaluated lazily each time
+ * `default` is called on the corresponding [[made.MadeFieldElem]].
+ *
+ * NOTE: extends `RefiningAnnotation` directly, NOT [[MetaAnnotation]].
+ * This means `@whenAbsent` is NOT captured in the `Metadata` type
+ * member and cannot be queried via `hasAnnotation` or `getAnnotation`.
+ *
+ * Priority chain: `@whenAbsent` > `@optionalParam` > constructor default.
+ *
+ * @tparam T the type of the default value
+ * @param v the default value, evaluated lazily
+ * @see [[made.MadeFieldElem]]
+ * @see [[optionalParam]]
+ */
 class whenAbsent[+T](v: => T) extends RefiningAnnotation:
   def value: T = v
 
+/**
+ * Companion for [[whenAbsent]].
+ *
+ * Provides the `value[T]` macro that bridges annotation values to
+ * constructor defaults. Used internally by the Made derivation to
+ * extract the `@whenAbsent` value at compile time.
+ */
 object whenAbsent:
   inline def value[T]: T = ${ valueImpl[T] }
 
