@@ -15,31 +15,31 @@ jobs:
       - name: Setup coursier cache
         uses: coursier/cache-action@v8.0
       - uses: VirtusLab/scala-cli-setup@v1.12.3
-      - name: Show signing key id used in signatures (temp)
+      - name: Publish
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           PGP_PRIVATE_KEY: ${{ secrets.PGP_PRIVATE_KEY }}
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         run: |
-          set -euo pipefail
-          # After scala-cli writes/signs locally, we can inspect one .asc file.
-          # We'll just ensure gpg is present and can parse signatures later.
-          gpg --version | head -n 1
-      - name: Locate signatures and print keyid (temp)
+          scala-cli --power publish . --verbose \
+            --user "env:SONATYPE_USERNAME" \
+            --password "env:SONATYPE_PASSWORD" \
+            --secret-key "env:PGP_PRIVATE_KEY" \
+            --secret-key-password "env:PGP_PASSPHRASE"
+
+      - name: Inspect generated signatures (temp)
+        if: always()
         run: |
           set -euo pipefail
-          # Find any .asc created during publish attempt
-          find . -name "*.asc" -maxdepth 6 -print || true
-#      - name: Publish
-#        env:
-#          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-#          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-#          PGP_PRIVATE_KEY: ${{ secrets.PGP_PRIVATE_KEY }}
-#          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-#        run: |
-#          scala-cli --power publish . --verbose \
-#            --user "env:SONATYPE_USERNAME" \
-#            --password "env:SONATYPE_PASSWORD" \
-#            --secret-key "env:PGP_PRIVATE_KEY" \
-#            --secret-key-password "env:PGP_PASSPHRASE"
+          echo "Searching for .asc files produced during publish..."
+          find . -type f -name "*.asc" -print | head -n 200 || true
+
+          sig="$(find . -type f -name "*.asc" | head -n 1 || true)"
+          if [ -z "${sig}" ]; then
+            echo "No .asc signatures found in workspace."
+            exit 0
+          fi
+
+          echo "Inspecting first signature: ${sig}"
+          gpg --list-packets "${sig}" | sed -n '1,120p'
