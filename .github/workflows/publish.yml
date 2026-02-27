@@ -24,7 +24,7 @@ jobs:
           PGP_PRIVATE_KEY: ${{ secrets.PGP_PRIVATE_KEY }}
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         run: |
-          scala-cli --power publish . \
+          scala-cli --power --verbose publish . \
             --user "env:SONATYPE_USERNAME" \
             --password "env:SONATYPE_PASSWORD" \
             --secret-key "env:PGP_PRIVATE_KEY" \
