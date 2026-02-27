@@ -31,7 +31,7 @@ jobs:
       - name: Setup scala-cli
         uses: VirtusLab/scala-cli-setup@v1.12.3
       - name: Generate documentation
-        run:
+        run: |
           scala-cli --power doc . -- \
           -project "M&DE" \
           -project-version ${{ github.ref_name }} \
