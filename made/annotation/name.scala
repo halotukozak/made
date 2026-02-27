@@ -1,5 +1,4 @@
 package made.annotation
-
 /**
  * Overrides the `MirroredLabel` type member for the annotated type or field.
  *

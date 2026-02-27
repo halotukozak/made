@@ -1,5 +1,4 @@
 package made.annotation
-
 /**
  * Marks a `val` or `def` to be included in `Made.GeneratedElems`.
  *

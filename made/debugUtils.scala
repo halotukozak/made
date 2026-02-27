@@ -1,5 +1,4 @@
 package made
-
 import scala.quoted.*
 import scala.util.Try
 

@@ -64,7 +64,7 @@ sealed trait Made:
    * Annotation metadata on `T`, represented as an `AnnotatedType` chain wrapping the [[Meta]]
    * base type. When no `MetaAnnotation` annotations are present, `Metadata = Meta`. When
    * annotations are present, `Metadata` becomes `Meta @Ann1 @Ann2 ...`.
-   * Query at runtime via [[hasAnnotation]] and [[getAnnotation]].
+   * Query at runtime via [[made.annotation.hasAnnotation]] and [[made.annotation.getAnnotation]].
    */
   type Metadata <: Meta
 
@@ -115,7 +115,7 @@ sealed trait MadeElem:
   /**
    * Annotation metadata on this element, represented as an `AnnotatedType` chain around [[Meta]].
    * Accessible at the type level but has no runtime query convenience methods
-   * (unlike [[Made]], which has [[hasAnnotation]] and [[getAnnotation]]).
+   * (unlike [[Made]], which has [[made.annotation.hasAnnotation]] and [[made.annotation.getAnnotation]]).
    */
   type Metadata <: Meta
 

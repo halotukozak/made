@@ -1,5 +1,4 @@
 package made.annotation
-
 import scala.annotation.RefiningAnnotation
 
 /**

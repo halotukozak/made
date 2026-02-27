@@ -1,5 +1,5 @@
 package made
-import made.annotation.MetaAnnotation
+package annotation
 
 import scala.annotation.tailrec
 import scala.quoted.*
