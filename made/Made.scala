@@ -20,7 +20,7 @@ import scala.quoted.*
  *
  * case class User(name: String, age: Int)
  *
- * val mirror: Made.ProductOf[User] = Made.derived[User]
+ * val mirror: Made.Of[User] = Made.derived[User]
  * // mirror type members:
  * //   type MirroredType = User
  * //   type MirroredLabel = "User"
