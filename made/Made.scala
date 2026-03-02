@@ -224,7 +224,7 @@ object Made:
   type ProductOf[T] = Made.Product { type MirroredType = T }
   type SumOf[T] = Made.Sum { type MirroredType = T }
   type SingletonOf[T] = Made.Singleton { type MirroredType = T }
-  type TransparentOf[T, U] = Made.Transparent { type MirroredType = T; type MirroredElemType = U }
+  type TransparentOf[T] = Made.Transparent { type MirroredType = T; }
 
   type LabelOf[l <: String] = MadeElem { type MirroredLabel = l }
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
@@ -435,8 +435,9 @@ object Made:
 
                   def unwrap(value: MirroredType): MirroredElemType = tw.unwrap(value)
                   def wrap(value: MirroredElemType): MirroredType = tw.wrap(value)
-                : Made.TransparentOf[T, fieldType] {
+                : Made.TransparentOf[T] {
                   type MirroredLabel = label
+                  type MirroredElemType = fieldType
                   type Metadata = meta
                   type MirroredElems = madeFieldElem *: EmptyTuple
                 }
