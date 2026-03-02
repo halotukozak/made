@@ -49,7 +49,7 @@ object whenAbsent:
       case other => other
 
     owner.getAnnotation(TypeRepr.of[whenAbsent[T]].typeSymbol) match
-      case Some(annot) => '{ (${ annot.asExprOf[whenAbsent[T]] }).value }
+      case Some(annot) => '{ ${ annot.asExprOf[whenAbsent[T]] }.value }
       case _ =>
         report.error("whenAbsent.value can only be used inside a parameter annotated with @whenAbsent")
         '{ ??? }
