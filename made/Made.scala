@@ -208,7 +208,7 @@ object GeneratedMadeElem:
   type OuterOf[Outer] = GeneratedMadeElem { type OuterMirroredType = Outer }
 
 // workaround for https://github.com/scala/scala3/issues/25245
-sealed trait GeneratedMadeElemWorkaround[Outer, Elem] extends GeneratedMadeElem:
+private sealed trait GeneratedMadeElemWorkaround[Outer, Elem] extends GeneratedMadeElem:
   final type OuterMirroredType = Outer
   final type MirroredType = Elem
 
@@ -681,6 +681,6 @@ object Made:
     final def generatedElems: GeneratedElems = EmptyTuple
 
   // workaround for https://github.com/scala/scala3/issues/25245
-  sealed trait TransparentWorkaround[T, U] extends Made.Transparent:
+  private sealed trait TransparentWorkaround[T, U] extends Made.Transparent:
     final type MirroredType = T
     final type MirroredElemType = U
