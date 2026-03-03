@@ -2,6 +2,7 @@ package made
 import scala.quoted.*
 import scala.util.Try
 
+// $COVERAGE-OFF$
 /**
  * Generates a detailed string representation of a symbol during macro expansion.
  *
@@ -186,3 +187,4 @@ private def showTypeReprImpl[T: Type](using quotes: Quotes): Expr[Nothing] =
 
 private[made] def wontHappen(using quotes: Quotes) =
   quotes.reflect.report.errorAndAbort(s"This code should never be executed")
+// $COVERAGE-ON$
