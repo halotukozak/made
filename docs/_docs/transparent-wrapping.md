@@ -4,7 +4,7 @@ title: Transparent Wrapping
 
 # Transparent Wrapping
 
-This guide explains how Made handles transparent wrapper types -- single-field case classes annotated with `@transparent`
+This guide explains how Made handles transparent wrapper types - single-field case classes annotated with `@transparent`
 that act as newtypes around an underlying value. Made derives a `Made.Transparent` mirror for these types instead of the
 usual `Made.Product`, providing `unwrap` and `wrap` methods for bidirectional conversion between the wrapper and its
 inner type.
@@ -38,12 +38,12 @@ derive as `Made.Transparent` with `unwrap`/`wrap` methods that directly access t
 
 Calling `Made.derived` on a `@transparent` type returns a `Made.Transparent` mirror. The mirror provides:
 
-- `type MirroredElemType` -- the single wrapped field's type
-- `def unwrap(value: MirroredType): MirroredElemType` -- extracts the inner value
-- `def wrap(value: MirroredElemType): MirroredType` -- constructs the wrapper from an inner value
-- `type MirroredLabel` -- the type name as a string literal type
-- `type Metadata` -- the annotation chain, which includes `@transparent`
-- `def mirroredElems` -- a single-element tuple containing one `MadeFieldElem`
+- `type MirroredElemType` - the single wrapped field's type
+- `def unwrap(value: MirroredType): MirroredElemType` - extracts the inner value
+- `def wrap(value: MirroredElemType): MirroredType` - constructs the wrapper from an inner value
+- `type MirroredLabel` - the type name as a string literal type
+- `type Metadata` - the annotation chain, which includes `@transparent`
+- `def mirroredElems` - a single-element tuple containing one `MadeFieldElem`
 
 The `GeneratedElems` type is fixed to `EmptyTuple`. `@generated` members are not supported on transparent types and
 will cause a compile error.

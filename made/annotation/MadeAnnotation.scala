@@ -39,7 +39,7 @@ extension (m: Made)
   /**
    * Returns `true` if the mirror's `Metadata` type member contains an annotation of type `A`.
    *
-   * Transparent inline -- resolved entirely at compile time, no runtime cost.
+   * Transparent inline - resolved entirely at compile time, no runtime cost.
    * `A` must extend [[made.annotation.MetaAnnotation]].
    */
   transparent inline def hasAnnotation[A <: MetaAnnotation]: Boolean = ${ hasAnnotationImpl[A, m.type] }
@@ -49,7 +49,7 @@ extension (m: Made)
    * of type `A`, `None` otherwise.
    *
    * The returned annotation instance provides access to annotation parameters
-   * (e.g., `getAnnotation[JsonName].get.value`). Inline -- resolved at compile time.
+   * (e.g., `getAnnotation[JsonName].get.value`). Inline - resolved at compile time.
    * `A` must extend [[made.annotation.MetaAnnotation]].
    */
   inline def getAnnotation[A <: MetaAnnotation]: Option[A] = ${ getAnnotationImpl[A, m.type] }

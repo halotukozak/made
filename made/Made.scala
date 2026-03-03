@@ -83,10 +83,10 @@ sealed trait Made:
  * carrying the element's type, label, and annotation metadata. The concrete
  * subtype depends on the mirror kind:
  *
- *  - [[MadeFieldElem]] -- constructor parameters in product mirrors
- *  - [[MadeSubElem]] -- non-singleton subtypes in sum mirrors
- *  - [[MadeSubSingletonElem]] -- singleton subtypes in sum mirrors
- *  - [[GeneratedMadeElem]] -- `@generated` members (in `GeneratedElems`)
+ *  - [[MadeFieldElem]] - constructor parameters in product mirrors
+ *  - [[MadeSubElem]] - non-singleton subtypes in sum mirrors
+ *  - [[MadeSubSingletonElem]] - singleton subtypes in sum mirrors
+ *  - [[GeneratedMadeElem]] - `@generated` members (in `GeneratedElems`)
  *
  * @example
  * {{{
@@ -134,10 +134,10 @@ sealed trait MadeFieldElem extends MadeElem:
   /**
    * Resolves a default value for this field using the following priority chain (first match wins):
    *
-   *  1. `@whenAbsent(value)` -- explicit default from annotation (highest priority)
-   *  2. `@optionalParam` -- uses `Default[T]` for option-like types
-   *  3. Constructor default -- the Scala-level default parameter value
-   *  4. `None` -- no default available
+   *  1. `@whenAbsent(value)` - explicit default from annotation (highest priority)
+   *  2. `@optionalParam` - uses `Default[T]` for option-like types
+   *  3. Constructor default - the Scala-level default parameter value
+   *  4. `None` - no default available
    *
    * @return the default value if available, `None` otherwise
    */
@@ -235,13 +235,13 @@ object Made:
    * The concrete subtype of the returned mirror is determined by the
    * following derivation priority (first match wins):
    *
-   *  1. [[Singleton]] -- `T` is an object, `Unit`, or a singleton type
-   *  2. [[Transparent]] -- `T` is annotated with `@transparent`
+   *  1. [[Singleton]] - `T` is an object, `Unit`, or a singleton type
+   *  2. [[Transparent]] - `T` is annotated with `@transparent`
    *     (must have exactly one constructor field; `@generated` members
    *     are not allowed)
-   *  3. [[Product]] -- `T` is a value class (extends `AnyVal`)
-   *  4. [[Product]] -- `T` has a `Mirror.ProductOf[T]` (case classes)
-   *  5. [[Sum]] -- `T` has a `Mirror.SumOf[T]` (sealed traits, enums)
+   *  3. [[Product]] - `T` is a value class (extends `AnyVal`)
+   *  4. [[Product]] - `T` has a `Mirror.ProductOf[T]` (case classes)
+   *  5. [[Sum]] - `T` has a `Mirror.SumOf[T]` (sealed traits, enums)
    *
    * The return type is `Made.Of[T]` but the actual runtime type is the
    * more specific subtype listed above.

@@ -4,7 +4,7 @@ title: Generated Members
 
 # Generated Members
 
-This guide explains how Made exposes non-constructor members -- vals and defs annotated with `@generated` -- through the
+This guide explains how Made exposes non-constructor members - vals and defs annotated with `@generated` - through the
 `GeneratedMadeElem` type and the `generatedElems` tuple. Standard `scala.deriving.Mirror` has no concept of
 non-constructor members. Made's `@generated` annotation marks vals and defs for inclusion in the mirror, making computed
 and derived properties visible to derivation code alongside constructor fields.
@@ -26,7 +26,7 @@ with `@generated`.
 
 This separation is intentional. Generated members cannot participate in product construction (`fromUnsafeArray`) because
 they are computed from an instance, not stored as constructor parameters. Keeping them in a separate tuple means
-existing derivation code -- like `Show[T]` from the type class derivation guide -- continues to work without
+existing derivation code - like `Show[T]` from the type class derivation guide - continues to work without
 modification. It simply never sees generated members.
 
 The following example defines a `Measurement` type with two constructor fields and one generated def, then demonstrates
@@ -47,8 +47,8 @@ val m = Measurement(9.81, "m/s")
 assert(displayGen(m) == "9.81 m/s")
 ```
 
-The `mirroredElems` tuple contains elements for `value` and `unit` -- the constructor fields. The `generatedElems` tuple
-contains a single element for `display` -- the `@generated` def. Derivation code that iterates `mirroredElems` will
+The `mirroredElems` tuple contains elements for `value` and `unit` - the constructor fields. The `generatedElems` tuple
+contains a single element for `display` - the `@generated` def. Derivation code that iterates `mirroredElems` will
 never encounter `display`.
 
 ## GeneratedMadeElem API

@@ -5,13 +5,13 @@ title: Default Values
 # Default Values
 
 This guide explains how Made resolves default values for product fields during derivation. When you derive a type class
-that constructs product instances from partial data -- a JSON decoder, a config loader, a builder -- you need to know
+that constructs product instances from partial data - a JSON decoder, a config loader, a builder - you need to know
 which fields have fallback values and what those values are. Made makes this available through `MadeFieldElem.default`,
 a method on each field element that returns `Option[MirroredType]` resolved at compile time.
 
 The default value for each field is determined by a three-level priority chain. The Made macro inspects annotations and
 constructor signatures at compile time, selects the highest-priority source, and bakes the result into the field
-element. At runtime, calling `.default` simply returns the pre-computed `Option` -- there is no reflection or annotation
+element. At runtime, calling `.default` simply returns the pre-computed `Option` - there is no reflection or annotation
 processing at runtime.
 
 This guide assumes you have read the type class derivation guide and understand Made mirrors, `MadeFieldElem`, and the
@@ -21,13 +21,13 @@ This guide assumes you have read the type class derivation guide and understand 
 
 Made resolves default values using the following priority chain (first match wins):
 
-1. `@whenAbsent(value)` -- explicit annotation default (highest priority)
-2. `@optionalParam` -- uses the `Default[T]` type class to produce an empty value
-3. Constructor default -- Scala's standard default parameter value
-4. `None` -- no default available
+1. `@whenAbsent(value)` - explicit annotation default (highest priority)
+2. `@optionalParam` - uses the `Default[T]` type class to produce an empty value
+3. Constructor default - Scala's standard default parameter value
+4. `None` - no default available
 
 The following type demonstrates all four levels in a single definition. The `host` field has no default. The `port`
-field has both `@whenAbsent(8080)` and a constructor default of `0` -- the annotation wins. The `timeout` field uses
+field has both `@whenAbsent(8080)` and a constructor default of `0` - the annotation wins. The `timeout` field uses
 `@optionalParam`, which summons `Default[Option[Int]]` to produce `None`. The `retries` field uses a plain constructor
 default.
 
@@ -70,7 +70,7 @@ assert(WithWhenAbsent().a == 0)
 ```
 
 The assertion shows that `elem.default` returns `Some(42)` (from the annotation), while `WithWhenAbsent()` constructs
-with `a = 0` (the constructor default). The two values are intentionally different -- the annotation controls what
+with `a = 0` (the constructor default). The two values are intentionally different - the annotation controls what
 derivation code sees, while the constructor default controls what direct callers get.
 
 ## whenAbsent.value: Keeping Values in Sync
@@ -80,8 +80,8 @@ When you want the annotation value and the constructor default to agree, the two
 will silently produce different results.
 
 The `whenAbsent.value` macro solves this. It reads the `@whenAbsent` annotation value at compile time and uses it as the
-constructor default. Both paths -- direct construction via `ServerConfig()` and derivation via
-`MadeFieldElem.default` -- produce the same value from a single source of truth.
+constructor default. Both paths - direct construction via `ServerConfig()` and derivation via
+`MadeFieldElem.default` - produce the same value from a single source of truth.
 
 ```scala
 import made.*
@@ -100,7 +100,7 @@ assert(elem.default.contains(8080))
 ## @optionalParam and Default
 
 `@optionalParam` marks a field as optional. When Made encounters this annotation, it summons `Default[T]` at compile
-time to produce the empty value for that field's type. This sits at priority level 2 -- below `@whenAbsent` but above
+time to produce the empty value for that field's type. This sits at priority level 2 - below `@whenAbsent` but above
 constructor defaults.
 
 The `Default[O]` type class is the extension point. It extends `() => O`, so calling a `Default` instance produces the

@@ -76,7 +76,7 @@ at compile time, then zip them with the product's field values at runtime to bui
 
 The derivation function must be `inline` because extracting labels from Made's type-level `MirroredLabel` and
 `MirroredElemLabels` requires `constValue` and `constValueTuple`, which only work in inline context. The mirror
-parameter is typed as `Made.ProductOf[T]` -- a type alias for `Made.Product { type MirroredType = T }`. By passing the
+parameter is typed as `Made.ProductOf[T]` - a type alias for `Made.Product { type MirroredType = T }`. By passing the
 mirror explicitly, the compiler sees the fully refined type (including `MirroredLabel` and `MirroredElemLabels`) at the
 inline expansion site.
 
@@ -85,7 +85,7 @@ The steps are:
 1. Use `constValue[m.MirroredLabel]` to get the type name as a runtime string.
 2. Use `constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]` to materialise field labels.
 3. Use `compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]]` to resolve `Show` instances for each field at
-   compile time -- no manual instance list needed.
+   compile time - no manual instance list needed.
 4. Use `value.productIterator.toList` to get field values.
 5. Zip labels with values and field `Show` instances, format each triple as `label = value`, and join them inside the
    type name.
@@ -106,11 +106,11 @@ inline def deriveProduct[T <: Product](m: Made.ProductOf[T]): Show[T] = value =>
 
 The call to `compiletime.summonAll` maps the type-level element tuple `m.MirroredElemTypes` to `Show` instances at
 compile time. For `User`, this resolves `Show[String]` and `Show[Int]` from the primitive givens above. This eliminates
-any need to manually list field instances -- the compiler handles it.
+any need to manually list field instances - the compiler handles it.
 
 The key Made-specific insight here is that `mirroredElems` gives you runtime `MadeFieldElem` objects. While this example
 uses `constValueTuple` for labels (same as standard Mirror), the runtime element objects become essential when you need
-metadata, defaults, or annotations -- capabilities that standard Mirror lacks entirely.
+metadata, defaults, or annotations - capabilities that standard Mirror lacks entirely.
 
 ## Transparent Mirrors
 
@@ -118,12 +118,12 @@ A `Made.Transparent` mirror wraps a single value. It is produced for case classe
 have exactly one constructor field. The mirror provides `unwrap` to extract the inner value and `wrap` to reconstruct
 the wrapper.
 
-For `Show`, a transparent type displays as `TypeName(innerValue)` -- the wrapper name followed by the shown inner value.
+For `Show`, a transparent type displays as `TypeName(innerValue)` - the wrapper name followed by the shown inner value.
 
 Transparent derivation unwraps the value and delegates to the underlying type's `Show`. The function takes
 `Made.TransparentOf[T]` as the mirror parameter. `compiletime.summonInline[Show[m.MirroredElemType]]` resolves the
 `Show` instance for the single underlying type at compile time. Because the type is transparent, the wrapper name is
-omitted -- `Email("alice@example.com")` shows as `alice@example.com`, not `Email(alice@example.com)`.
+omitted - `Email("alice@example.com")` shows as `alice@example.com`, not `Email(alice@example.com)`.
 
 ```scala
 inline def deriveTransparent[T](m: Made.TransparentOf[T]): Show[T] = value =>
@@ -133,7 +133,7 @@ inline def deriveTransparent[T](m: Made.TransparentOf[T]): Show[T] = value =>
 ```
 
 Transparent mirrors also carry a single-element `mirroredElems` tuple containing one `MadeFieldElem`, so you could
-iterate it the same way as a product. However, `unwrap`/`wrap` is the idiomatic approach -- it makes the single-field
+iterate it the same way as a product. However, `unwrap`/`wrap` is the idiomatic approach - it makes the single-field
 semantics explicit and avoids the overhead of tuple iteration for what is always exactly one element.
 
 ## Sum Type Derivation
@@ -143,7 +143,7 @@ sum derivation dispatches on the runtime type of the value to find the correct s
 
 The function below takes a `Made.SumOf[T]` mirror and uses `compiletime.summonAll` to resolve both `ClassTag` and
 `Show` instances for every subtype at compile time. At runtime, it zips the two lists and finds the first `ClassTag`
-whose `unapply` matches the value -- this handles both singleton subtypes (case objects) and parameterised subtypes
+whose `unapply` matches the value - this handles both singleton subtypes (case objects) and parameterised subtypes
 (case classes) uniformly.
 
 ```scala
@@ -162,12 +162,12 @@ inline def deriveSum[T](m: Made.SumOf[T]): Show[T] = value =>
 
 The `ClassTag.unapply` check performs a runtime type test: for `Point`, the `ClassTag[Point.type]` matches; for
 `Circle(3.14)`, the `ClassTag[Circle]` matches. Once the matching subtype is found, its `Show` instance formats the
-value. The `compiletime.summonAll` calls resolve instances for all subtypes at compile time -- for `Shape`, this means
+value. The `compiletime.summonAll` calls resolve instances for all subtypes at compile time - for `Shape`, this means
 `ClassTag` and `Show` for `Circle`, `Rectangle`, and `Point.type` must all be in scope.
 
 ## Singleton Mirrors
 
-`Made.Singleton` is produced for standalone objects and `Unit`. Its `mirroredElems` is `EmptyTuple` -- there are no
+`Made.Singleton` is produced for standalone objects and `Unit`. Its `mirroredElems` is `EmptyTuple` - there are no
 fields or subtypes to iterate. The singleton instance is available via `value`.
 
 For `Show`, a singleton simply outputs its type label. Sum derivation already handles singletons via `ClassTag`
