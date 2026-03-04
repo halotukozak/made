@@ -39,7 +39,7 @@ jobs:
           -project-version ${{ github.ref_name }} \
           -project-footer "made with ❤️ and coffee" \
           -social-links:github::https://github.com/halotukozak/made \
-          -snippet-compiler:nocompile \
+          -snippet-compiler:compile \
           -source-links:"src=github://halotukozak/made?tag=${{ github.ref_name }}" \
           -revision:${{ github.ref_name }}
       - name: Setup Pages
