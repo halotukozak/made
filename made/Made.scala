@@ -129,7 +129,6 @@ sealed trait MadeElem:
 
   /** The element's label (field name or subtype name, or the override provided by `@name`). */
   type Label <: String
-  val label: Label
 
   /**
    * Annotation metadata on `T`, represented as an `AnnotatedType` chain wrapping the [[Meta]]
@@ -521,7 +520,7 @@ object Made:
                 type label <: String;
 
                 $m: Mirror.ProductOf[T] {
-                  type Label = label
+                  type MirroredLabel = label
                   type MirroredElemTypes = mirroredElemTypes
                 }
               } =>
@@ -574,7 +573,7 @@ object Made:
                 type label <: String;
 
                 $_ : Mirror.SumOf[T] {
-                  type Label = label
+                  type MirroredLabel = label
                   type MirroredElemTypes = mirroredElemTypes
                 }
               } =>
