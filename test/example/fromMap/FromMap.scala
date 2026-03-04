@@ -10,8 +10,8 @@ object FromMap:
     case _ => compiletime.error("Cannot derive FromMap")
 
   inline private def derivedProduct[T](using m: Made.ProductOf[T]): FromMap[T] = source =>
-    val labels = compiletime.constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]
-    val elems = m.mirroredElems.toList.asInstanceOf[List[MadeFieldElem]]
+    val labels = compiletime.constValueTuple[m.ElemLabels].toList.asInstanceOf[List[String]]
+    val elems = m.elems.toList.asInstanceOf[List[MadeFieldElem]]
 
     val values = labels
       .zip(elems)

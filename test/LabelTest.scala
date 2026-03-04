@@ -47,21 +47,21 @@ class LabelTest extends munit.FunSuite:
 
   test("elem label for product fields") {
     val mirror = Made.derived[SimpleCaseClass]
-    val id *: name *: EmptyTuple = mirror.mirroredElems
+    val id *: name *: EmptyTuple = mirror.elems
     assertEquals(id.label, "id")
     assertEquals(name.label, "name")
   }
 
   test("elem label for enum subtypes") {
     val mirror = Made.derived[SimpleEnum]
-    val case1 *: case2 *: EmptyTuple = mirror.mirroredElems
+    val case1 *: case2 *: EmptyTuple = mirror.elems
     assertEquals(case1.label, "Case1")
     assertEquals(case2.label, "Case2")
   }
 
   test("elem label with @name override") {
     val mirror = Made.derived[NamedEnum]
-    val case1 *: case2 *: EmptyTuple = mirror.mirroredElems
+    val case1 *: case2 *: EmptyTuple = mirror.elems
     assertEquals(case1.label, "C1")
     assertEquals(case2.label, "Case2")
   }
@@ -74,13 +74,13 @@ class LabelTest extends munit.FunSuite:
 
   test("elem label for @transparent field") {
     val mirror = Made.derived[TransparentClass]
-    val field *: EmptyTuple = mirror.mirroredElems
+    val field *: EmptyTuple = mirror.elems
     assertEquals(field.label, "int")
   }
 
   test("elem label with inherited @name") {
     val mirror = Made.derived[InheritedName]
-    val field *: EmptyTuple = mirror.mirroredElems
+    val field *: EmptyTuple = mirror.elems
     assertEquals(field.label, "customName")
   }
 

@@ -41,7 +41,7 @@ case class Measurement(value: Double, unit: String):
   @generated def display: String = s"$value $unit"
 
 val mirror = Made.derived[Measurement]
-val (valueFld, unitFld) = mirror.mirroredElems
+val (valueFld, unitFld) = mirror.elems
 val displayGen *: EmptyTuple = mirror.generatedElems
 
 val m = Measurement(9.81, "m/s")
@@ -148,6 +148,7 @@ import made.annotation.*
 
 case class SensorReading(id: String, value: Double):
   @generated def summary: String = s"$id=$value"
+
   @generated def isValid: Boolean = value >= 0
 
 trait Describe[T]:
@@ -160,7 +161,7 @@ object Describe:
 
   inline private def derivedProduct[T](using mirror: Made.ProductOf[T]): Describe[T] = instance =>
     val fieldLabels = compiletime
-      .constValueTuple[mirror.MirroredElemLabels]
+      .constValueTuple[mirror.ElemLabels]
       .toList
       .asInstanceOf[List[String]]
 

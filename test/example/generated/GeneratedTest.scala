@@ -61,7 +61,7 @@ class GeneratedTest extends munit.FunSuite:
 
       inline private def derivedProduct[T](using mirror: Made.ProductOf[T]): Describe[T] = instance =>
         val fieldLabels = compiletime
-          .constValueTuple[mirror.MirroredElemLabels]
+          .constValueTuple[mirror.ElemLabels]
           .toList
           .asInstanceOf[List[String]]
 

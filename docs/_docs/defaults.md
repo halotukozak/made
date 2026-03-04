@@ -40,7 +40,7 @@ import scala.compiletime.*
 case class Config(host: String, @whenAbsent(8080) port: Int = 0, @optionalParam timeout: Option[Int], retries: Int = 3)
 
 val mirror = Made.derived[Config]
-val (host, port, timeout, retries) = mirror.mirroredElems
+val (host, port, timeout, retries) = mirror.elems
 
 assert(host.default.isEmpty)
 assert(port.default.contains(8080))
@@ -64,7 +64,7 @@ import made.annotation.*
 case class WithWhenAbsent(@whenAbsent(42) a: Int = 0)
 
 val mirror = Made.derived[WithWhenAbsent]
-val elem *: EmptyTuple = mirror.mirroredElems
+val elem *: EmptyTuple = mirror.elems
 
 assert(elem.default.contains(42))
 assert(WithWhenAbsent().a == 0)
@@ -93,7 +93,7 @@ case class ServerConfig(@whenAbsent(8080) port: Int = whenAbsent.value)
 assert(ServerConfig().port == 8080)
 
 val mirror = Made.derived[ServerConfig]
-val elem *: EmptyTuple = mirror.mirroredElems
+val elem *: EmptyTuple = mirror.elems
 
 assert(elem.default.contains(8080))
 ```
@@ -115,7 +115,7 @@ import made.annotation.*
 case class Request(@optionalParam body: Option[String], @optionalParam header: String | Null, query: Option[String])
 
 val mirror = Made.derived[Request]
-val (body, header, query) = mirror.mirroredElems
+val (body, header, query) = mirror.elems
 
 assert(body.default.contains(None))
 assert(header.default.contains(null: String | Null))
@@ -139,7 +139,7 @@ given Default[Fallback[String]] = () => Fallback("N/A")
 case class Settings(@optionalParam label: Fallback[String])
 
 val mirror = Made.derived[Settings]
-val elem *: EmptyTuple = mirror.mirroredElems
+val elem *: EmptyTuple = mirror.elems
 
 assert(elem.default.contains(Fallback("N/A")))
 ```
@@ -166,8 +166,8 @@ object FromMap:
     case _ => compiletime.error("Cannot derive FromMap")
 
   inline private def derivedProduct[T](using m: Made.ProductOf[T]): FromMap[T] = source =>
-    val labels = compiletime.constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]
-    val elems = m.mirroredElems.toList.asInstanceOf[List[MadeFieldElem]]
+    val labels = compiletime.constValueTuple[m.ElemLabels].toList.asInstanceOf[List[String]]
+    val elems = m.elems.toList.asInstanceOf[List[MadeFieldElem]]
 
     val values = labels
       .zip(elems)

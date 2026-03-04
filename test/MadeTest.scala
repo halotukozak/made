@@ -337,7 +337,7 @@ class MadeTest extends munit.FunSuite:
 
   test("MadeElem.hasAnnotation returns false for unannotated field") {
     val mirror = Made.derived[SimpleCaseClass]
-    val id *: name *: EmptyTuple = mirror.mirroredElems
+    val id *: name *: EmptyTuple = mirror.elems
 
     assert(!id.hasAnnotation[Annotation1])
     assert(!id.hasAnnotation[generated])
@@ -346,7 +346,7 @@ class MadeTest extends munit.FunSuite:
 
   test("MadeElem.getAnnotation returns None for unannotated field") {
     val mirror = Made.derived[SimpleCaseClass]
-    val id *: name *: EmptyTuple = mirror.mirroredElems
+    val id *: name *: EmptyTuple = mirror.elems
 
     assert(id.getAnnotation[Annotation1].isEmpty)
     assert(name.getAnnotation[Annotation1].isEmpty)
@@ -404,7 +404,7 @@ class MadeTest extends munit.FunSuite:
 
   test("inherit name") {
     val mirror = Made.derived[InheritedName]
-    val fieldElem *: EmptyTuple = mirror.mirroredElems
+    val fieldElem *: EmptyTuple = mirror.elems
     summon[fieldElem.Label =:= "customName"]
   }
 
