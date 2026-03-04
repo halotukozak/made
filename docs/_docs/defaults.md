@@ -155,6 +155,7 @@ values. When a key is absent, it uses `elem.default.getOrElse(throw ...)` to pro
 
 ```scala
 import made.*
+import made.annotation.*
 import scala.compiletime.*
 
 trait FromMap[T]:
