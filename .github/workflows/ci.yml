@@ -38,4 +38,4 @@ jobs:
           files: .scoverage/report/cobertura.xml
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Test documentation
-        run: scala-cli --power doc . -- -snippet-compiler:nocompile
+        run: scala-cli --power doc .
