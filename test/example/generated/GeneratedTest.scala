@@ -73,7 +73,7 @@ class GeneratedTest extends munit.FunSuite:
           val gen = elem.asInstanceOf[GeneratedMadeElem.OuterOf[T]]
           gen(instance)
 
-        val typeName = compiletime.constValue[mirror.MirroredLabel]
+        val typeName = compiletime.constValue[mirror.Label]
 
         (fieldEntries ++ genEntries).mkString(s"$typeName(\n", ",\n", "\n)")
 

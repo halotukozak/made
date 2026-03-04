@@ -5,19 +5,19 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("case class with defaults") {
     val m: Made.Product {
       type MirroredType = WithDefaults
-      type MirroredLabel = "WithDefaults"
+      type Label = "WithDefaults"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
         type MirroredType = Int
-        type MirroredLabel = "x"
+        type Label = "x"
         type Metadata = Meta
       } *: MadeFieldElem {
         type MirroredType = String
-        type MirroredLabel = "y"
+        type Label = "y"
         type Metadata = Meta
       } *: MadeFieldElem {
         type MirroredType = Boolean
-        type MirroredLabel = "z"
+        type Label = "z"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[WithDefaults]
@@ -32,15 +32,15 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("case class with all defaults") {
     val m: Made.Product {
       type MirroredType = AllDefaults
-      type MirroredLabel = "AllDefaults"
+      type Label = "AllDefaults"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
         type MirroredType = Int
-        type MirroredLabel = "a"
+        type Label = "a"
         type Metadata = Meta
       } *: MadeFieldElem {
         type MirroredType = String
-        type MirroredLabel = "b"
+        type Label = "b"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[AllDefaults]
@@ -54,15 +54,15 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("case class with mixed defaults") {
     val m: Made.Product {
       type MirroredType = MixedDefaults
-      type MirroredLabel = "MixedDefaults"
+      type Label = "MixedDefaults"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
         type MirroredType = Int
-        type MirroredLabel = "required"
+        type Label = "required"
         type Metadata = Meta
       } *: MadeFieldElem {
         type MirroredType = String
-        type MirroredLabel = "optional"
+        type Label = "optional"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[MixedDefaults]

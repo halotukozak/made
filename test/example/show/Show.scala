@@ -20,7 +20,7 @@ object Show:
     case m: Made.TransparentOf[T] => deriveTransparent(m)
 
   inline def deriveProduct[T <: Product](m: Made.ProductOf[T]): Show[T] = value =>
-    val typeName = compiletime.constValue[m.MirroredLabel]
+    val typeName = compiletime.constValue[m.Label]
     val labels = compiletime.constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]
     val values = value.productIterator.toList
     val fieldShows = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
@@ -44,4 +44,4 @@ object Show:
         case (clazz, s) if clazz.unapply(value).isDefined => s.show(value)
       .getOrElse(throw IllegalStateException("Unable to find subtype"))
 
-  inline def deriveSingleton[T](m: Made.SingletonOf[T]): Show[T] = _ => compiletime.constValue[m.MirroredLabel]
+  inline def deriveSingleton[T](m: Made.SingletonOf[T]): Show[T] = _ => compiletime.constValue[m.Label]

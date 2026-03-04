@@ -9,12 +9,12 @@ class GeneratedAnnotationTest extends munit.FunSuite:
 
     type Expected = GeneratedMadeElem {
       type MirroredType = String
-      type MirroredLabel = "ab"
+      type Label = "ab"
       type Metadata = Meta @generated
       type OuterMirroredType = Prod
     } *: GeneratedMadeElem {
       type MirroredType = Int
-      type MirroredLabel = "len"
+      type Label = "len"
       type Metadata = Meta @generated
       type OuterMirroredType = Prod
     } *: EmptyTuple
@@ -32,7 +32,7 @@ class GeneratedAnnotationTest extends munit.FunSuite:
 
     type Expected = GeneratedMadeElem {
       type MirroredType = String
-      type MirroredLabel = "upper"
+      type Label = "upper"
       type Metadata = Meta @generated
       type OuterMirroredType = VC
     } *: EmptyTuple
@@ -48,7 +48,7 @@ class GeneratedAnnotationTest extends munit.FunSuite:
 
     type Expected = GeneratedMadeElem {
       type MirroredType = Int
-      type MirroredLabel = "const"
+      type Label = "const"
       type Metadata = Meta @generated
       type OuterMirroredType = SumADT
     } *: EmptyTuple
@@ -65,7 +65,7 @@ class GeneratedAnnotationTest extends munit.FunSuite:
 
     type Expected = GeneratedMadeElem {
       type MirroredType = String
-      type MirroredLabel = "info"
+      type Label = "info"
       type Metadata = Meta @generated
       type OuterMirroredType = GenEnum
     } *: EmptyTuple
@@ -82,7 +82,7 @@ class GeneratedAnnotationTest extends munit.FunSuite:
 
     type Expected = GeneratedMadeElem {
       type MirroredType = Int
-      type MirroredLabel = "id"
+      type Label = "id"
       type Metadata = Meta @generated
       type OuterMirroredType = GenObj.type
     } *: EmptyTuple

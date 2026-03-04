@@ -7,14 +7,14 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for case class") {
     val _: Made {
       type MirroredType = SimpleCaseClass
-      type MirroredLabel = "SimpleCaseClass"
+      type Label = "SimpleCaseClass"
       type MirroredElems = MadeFieldElem {
         type MirroredType = Long
-        type MirroredLabel = "id"
+        type Label = "id"
         type Metadata = Meta
       } *: MadeFieldElem {
         type MirroredType = String
-        type MirroredLabel = "name"
+        type Label = "name"
         type Metadata = Meta
       } *: EmptyTuple
       type Metadata = Meta
@@ -24,7 +24,7 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for case class with no fields") {
     val _: Made.Product {
       type MirroredType = NoFields
-      type MirroredLabel = "NoFields"
+      type Label = "NoFields"
       type Metadata = Meta
       type MirroredElems = EmptyTuple
     } = Made.derived[NoFields]
@@ -33,11 +33,11 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for generic case class") {
     val _: Made.Product {
       type MirroredType = Box[Int]
-      type MirroredLabel = "Box"
+      type Label = "Box"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
         type MirroredType = Int
-        type MirroredLabel = "a"
+        type Label = "a"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[Box[Int]]
@@ -46,15 +46,15 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for enum") {
     val _: Made.Sum {
       type MirroredType = SimpleEnum
-      type MirroredLabel = "SimpleEnum"
+      type Label = "SimpleEnum"
       type Metadata = Meta
       type MirroredElems = MadeSubSingletonElem {
         type MirroredType = SimpleEnum.Case1.type
-        type MirroredLabel = "Case1"
+        type Label = "Case1"
         type Metadata = Meta
       } *: MadeSubElem {
         type MirroredType = SimpleEnum.Case2
-        type MirroredLabel = "Case2"
+        type Label = "Case2"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[SimpleEnum]
@@ -63,7 +63,7 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for object") {
     val mirror: Made.Singleton {
       type MirroredType = SimpleObject.type
-      type MirroredLabel = "SimpleObject"
+      type Label = "SimpleObject"
       type Metadata = Meta
       type MirroredElems = EmptyTuple
     } = Made.derived[SimpleObject.type]
@@ -74,7 +74,7 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for Unit") {
     val mirror: Made.Singleton {
       type MirroredType = Unit
-      type MirroredLabel = "Unit"
+      type Label = "Unit"
       type Metadata = Meta
     } = Made.derived[Unit]
     assert(mirror.value == ())
@@ -83,7 +83,7 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for value class") {
     val mirror: Made.Product {
       type MirroredType = ValueClass
-      type MirroredLabel = "ValueClass"
+      type Label = "ValueClass"
       type Metadata = Meta
     } = Made.derived[ValueClass]
     assert(mirror.fromUnsafeArray(Array("test")) == ValueClass("test"))
@@ -92,12 +92,12 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for @transparent case class") {
     val mirror: Made.Transparent {
       type MirroredType = TransparentClass
-      type MirroredLabel = "TransparentClass"
+      type Label = "TransparentClass"
       type Metadata = Meta @transparent
       type MirroredElemType = Int
       type MirroredElems = MadeFieldElem {
         type MirroredType = Int
-        type MirroredLabel = "int"
+        type Label = "int"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[TransparentClass]
@@ -141,15 +141,15 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for enum with @name") {
     val _: Made.Sum {
       type MirroredType = NamedEnum
-      type MirroredLabel = "NamedEnum"
+      type Label = "NamedEnum"
       type Metadata = Meta
       type MirroredElems <: MadeElem {
         type MirroredType = NamedEnum.Case1.type
-        type MirroredLabel = "C1"
+        type Label = "C1"
 //        type Metadata = Meta @name("C1")
       } *: MadeElem {
         type MirroredType = NamedEnum.Case2.type
-        type MirroredLabel = "Case2"
+        type Label = "Case2"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[NamedEnum]
@@ -158,15 +158,15 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for recursive ADT") {
     val _: Made.Sum {
       type MirroredType = Recursive
-      type MirroredLabel = "Recursive"
+      type Label = "Recursive"
       type Metadata = Meta
       type MirroredElems = MadeSubSingletonElem {
         type MirroredType = Recursive.End.type
-        type MirroredLabel = "End"
+        type Label = "End"
         type Metadata = Meta
       } *: MadeSubElem {
         type MirroredType = Recursive.Next
-        type MirroredLabel = "Next"
+        type Label = "Next"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[Recursive]
@@ -175,15 +175,15 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for ADT with mixed cases") {
     val _: Made.Sum {
       type MirroredType = MixedADT
-      type MirroredLabel = "MixedADT"
+      type Label = "MixedADT"
       type Metadata = Meta
       type MirroredElems = MadeSubElem {
         type MirroredType = MixedADT.CaseClass
-        type MirroredLabel = "CaseClass"
+        type Label = "CaseClass"
         type Metadata = Meta
       } *: MadeSubSingletonElem {
         type MirroredType = MixedADT.CaseObj.type
-        type MirroredLabel = "CaseObj"
+        type Label = "CaseObj"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[MixedADT]
@@ -192,17 +192,17 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror should include @generated members") {
     val m: Made {
       type MirroredType = HasGenerated
-      type MirroredLabel = "HasGenerated"
+      type Label = "HasGenerated"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
         type MirroredType = String
-        type MirroredLabel = "str"
+        type Label = "str"
         type Metadata = Meta
       } *: EmptyTuple
       type GeneratedElems = GeneratedMadeElem {
         type OuterMirroredType = HasGenerated
         type MirroredType = Int
-        type MirroredLabel = "gen"
+        type Label = "gen"
         type Metadata = Meta @generated
       } *: EmptyTuple
     } = Made.derived[HasGenerated]
@@ -214,11 +214,11 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for HK case class") {
     val _: Made.Product {
       type MirroredType = HKBox[List]
-      type MirroredLabel = "HKBox"
+      type Label = "HKBox"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
         type MirroredType = List[Int]
-        type MirroredLabel = "fa"
+        type Label = "fa"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[HKBox[List]]
@@ -227,15 +227,15 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for HK sum") {
     val _: Made.Sum {
       type MirroredType = HKADT[List, Int]
-      type MirroredLabel = "HKADT"
+      type Label = "HKADT"
       type Metadata = Meta
       type MirroredElems = MadeSubElem {
         type MirroredType = HKADT.Case1[List, Int]
-        type MirroredLabel = "Case1"
+        type Label = "Case1"
         type Metadata = Meta
       } *: MadeSubElem {
         type MirroredType = HKADT.Case2[List, Int]
-        type MirroredLabel = "Case2"
+        type Label = "Case2"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[HKADT[List, Int]]
@@ -244,11 +244,11 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for recursive case class") {
     val _: Made.Product {
       type MirroredType = Recursive.Next
-      type MirroredLabel = "Next"
+      type Label = "Next"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
         type MirroredType = Recursive
-        type MirroredLabel = "r"
+        type Label = "r"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[Recursive.Next]
@@ -263,19 +263,19 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for recursive case class with Option") {
     val _: Made.Product {
       type MirroredType = RecTree
-      type MirroredLabel = "RecTree"
+      type Label = "RecTree"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
         type MirroredType = Int
-        type MirroredLabel = "value"
+        type Label = "value"
         type Metadata = Meta
       } *: MadeFieldElem {
         type MirroredType = Option[RecTree]
-        type MirroredLabel = "left"
+        type Label = "left"
         type Metadata = Meta
       } *: MadeFieldElem {
         type MirroredType = Option[RecTree]
-        type MirroredLabel = "right"
+        type Label = "right"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[RecTree]
@@ -292,10 +292,10 @@ class MadeTest extends munit.FunSuite:
   test("DerMirror for case class with wildcard") {
     val _: Made.Product {
       type MirroredType = Box[?]
-      type MirroredLabel = "Box"
+      type Label = "Box"
       type Metadata = Meta;
       type MirroredElems <: MadeElem {
-        type MirroredLabel = "a"
+        type Label = "a"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[Box[?]]
@@ -405,7 +405,7 @@ class MadeTest extends munit.FunSuite:
   test("inherit name") {
     val mirror = Made.derived[InheritedName]
     val fieldElem *: EmptyTuple = mirror.mirroredElems
-    summon[fieldElem.MirroredLabel =:= "customName"]
+    summon[fieldElem.Label =:= "customName"]
   }
 
 sealed trait MixedADT
