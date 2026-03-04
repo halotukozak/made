@@ -94,7 +94,6 @@ sealed trait Made:
    */
   inline def getAnnotation[A <: MetaAnnotation]: Option[A] = ${ getAnnotationImpl[A, this.type] }
 
-
 /**
  * Base type for elements within a [[Made]] mirror's `MirroredElems` tuple.
  *
@@ -722,4 +721,3 @@ object Made:
   private sealed trait TransparentWorkaround[T, U] extends Made.Transparent:
     final type MirroredType = T
     final type MirroredElemType = U
-
