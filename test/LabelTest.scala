@@ -1,7 +1,6 @@
 package made
 
 import made.annotation.*
-import made.Made.label
 
 class LabelTest extends munit.FunSuite:
 

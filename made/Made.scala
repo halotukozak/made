@@ -59,7 +59,7 @@ sealed trait Made:
 
   /** The simple name of `T` (or the override provided by `@name`). */
   type Label <: String
-  
+
   /**
    * Annotation metadata on `T`, represented as an `AnnotatedType` chain wrapping the [[Meta]]
    * base type. When no `MetaAnnotation` annotations are present, `Metadata = Meta`. When
@@ -75,24 +75,6 @@ sealed trait Made:
   type GeneratedElems <: Tuple
   def mirroredElems: MirroredElems
   def generatedElems: GeneratedElems
-
-  /**
-   * Returns `true` if the mirror's `Metadata` type member contains an annotation of type `A`.
-   *
-   * Transparent inline - resolved entirely at compile time, no runtime cost.
-   * `A` must extend [[made.annotation.MetaAnnotation]].
-   */
-  transparent inline def hasAnnotation[A <: MetaAnnotation]: Boolean = ${ hasAnnotationImpl[A, this.type] }
-
-  /**
-   * Returns `Some(annotation)` if the mirror's `Metadata` type member contains an annotation
-   * of type `A`, `None` otherwise.
-   *
-   * The returned annotation instance provides access to annotation parameters
-   * (e.g., `getAnnotation[JsonName].get.value`). Inline - resolved at compile time.
-   * `A` must extend [[made.annotation.MetaAnnotation]].
-   */
-  inline def getAnnotation[A <: MetaAnnotation]: Option[A] = ${ getAnnotationImpl[A, this.type] }
 
 /**
  * Base type for elements within a [[Made]] mirror's `MirroredElems` tuple.
@@ -137,24 +119,6 @@ sealed trait MadeElem:
    * Query at runtime via [[hasAnnotation]] and [[getAnnotation]].
    */
   type Metadata <: Meta
-
-  /**
-   * Returns `true` if the mirror's `Metadata` type member contains an annotation of type `A`.
-   *
-   * Transparent inline - resolved entirely at compile time, no runtime cost.
-   * `A` must extend [[made.annotation.MetaAnnotation]].
-   */
-  transparent inline def hasAnnotation[A <: MetaAnnotation]: Boolean = ${ hasAnnotationImpl[A, this.type] }
-
-  /**
-   * Returns `Some(annotation)` if the mirror's `Metadata` type member contains an annotation
-   * of type `A`, `None` otherwise.
-   *
-   * The returned annotation instance provides access to annotation parameters
-   * (e.g., `getAnnotation[JsonName].get.value`). Inline - resolved at compile time.
-   * `A` must extend [[made.annotation.MetaAnnotation]`.
-   */
-  inline def getAnnotation[A <: MetaAnnotation]: Option[A] = ${ getAnnotationImpl[A, this.type] }
 
 /**
  * Element representing a constructor parameter in a product type mirror.
@@ -726,5 +690,3 @@ object Made:
   private sealed trait TransparentWorkaround[T, U] extends Made.Transparent:
     final type MirroredType = T
     final type MirroredElemType = U
- 
-  extension (l: {type Label <: String}) inline def label: l.Label = compiletime.constValue[l.Label]
