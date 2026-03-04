@@ -94,7 +94,6 @@ sealed trait Made:
    */
   inline def getAnnotation[A <: MetaAnnotation]: Option[A] = ${ getAnnotationImpl[A, this.type] }
 
-
 /**
  * Base type for elements within a [[Made]] mirror's `MirroredElems` tuple.
  *
@@ -525,25 +524,26 @@ object Made:
                 }
               } =>
 
-            val elems = Expr.ofTupleFromSeq(
-              tSymbol.caseFields.zipWithIndex
-                .zip(traverseTuple(Type.of[mirroredElemTypes]))
-                .map:
-                  case ((fieldSymbol, index), '[fieldTpe]) =>
-                    (labelTypeOf(fieldSymbol, fieldSymbol.name), metaTypeOf(fieldSymbol)).runtimeChecked match
-                      case ('[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
-                        '{
-                          new MadeFieldElem:
-                            type MirroredType = fieldTpe
-                            type MirroredLabel = elemLabel
-                            type Metadata = meta
+            val (exprs, names) = tSymbol.caseFields.zipWithIndex
+              .zip(traverseTuple(Type.of[mirroredElemTypes]))
+              .foldLeft((Vector.empty[Expr[?]], Vector.empty[(label: String, original: String)])):
+                case ((exprs, names), ((fieldSymbol, index), '[fieldTpe])) =>
+                  (labelTypeOf(fieldSymbol, fieldSymbol.name), metaTypeOf(fieldSymbol)).runtimeChecked match
+                    case ('[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
+                      val expr = '{
+                        new MadeFieldElem:
+                          type MirroredType = fieldTpe
+                          type MirroredLabel = elemLabel
+                          type Metadata = meta
 
-                            def default = ${ defaultOf[fieldTpe](index, fieldSymbol) }
-                        }
-                  case (_, _) => wontHappen,
-            )
+                          def default = ${ defaultOf[fieldTpe](index, fieldSymbol) }
+                      }
+                      (exprs :+ expr, names :+ (typeToString[elemLabel], fieldSymbol.name))
+                case _ => wontHappen
 
-            elems match
+            reportOnDuplicates(names)
+
+            Expr.ofTupleFromSeq(exprs) match
               case '{ type mirroredElems <: Tuple; $mirroredElemsExpr: mirroredElems } =>
                 '{
                   new Made.Product:
@@ -577,35 +577,38 @@ object Made:
                 }
               } =>
 
-            val elems = Expr.ofTupleFromSeq(traverseTuple(Type.of[mirroredElemTypes]).map:
-              case '[subType] =>
-                val subType = TypeRepr.of[subType]
-                val subSymbol = if subType.termSymbol.isNoSymbol then subType.typeSymbol else subType.termSymbol
+            val (exprs, names) = traverseTuple(Type.of[mirroredElemTypes])
+              .foldLeft((Vector.empty[Expr[?]], Vector.empty[(label: String, original: String)])):
+                case ((exprs, names), '[subType]) =>
+                  val subType = TypeRepr.of[subType]
+                  val subSymbol = if subType.termSymbol.isNoSymbol then subType.typeSymbol else subType.termSymbol
 
-                (labelTypeOf(subSymbol, subSymbol.name), metaTypeOf(subSymbol)).runtimeChecked match
-                  case ('[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
-                    Type.of[subType] match
-                      case '[type s <: scala.Singleton; s] =>
-                        '{
-                          new MadeSubSingletonElem:
-                            type MirroredType = s
-                            type MirroredLabel = elemLabel
-                            type Metadata = meta
+                  (labelTypeOf(subSymbol, subSymbol.name), metaTypeOf(subSymbol)).runtimeChecked match
+                    case ('[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
+                      val expr = Type.of[subType] match
+                        case '[type s <: scala.Singleton; s] =>
+                          '{
+                            new MadeSubSingletonElem:
+                              type MirroredType = s
+                              type MirroredLabel = elemLabel
+                              type Metadata = meta
 
-                            def value: s = singleValueOf[s]
-                        }
-                      case '[s] =>
-                        '{
-                          new MadeSubElem:
-                            type MirroredType = subType
-                            type MirroredLabel = elemLabel
-                            type Metadata = meta
-                        })
+                              def value: s = singleValueOf[s]
+                          }
+                        case '[s] =>
+                          '{
+                            new MadeSubElem:
+                              type MirroredType = subType
+                              type MirroredLabel = elemLabel
+                              type Metadata = meta
+                          }
+                      (exprs :+ expr, names :+ (typeToString[elemLabel], subSymbol.name))
+                case _ => wontHappen
 
-            elems match
-              case '{
-                    type mirroredElems <: Tuple; $mirroredElemsExpr: mirroredElems
-                  } =>
+            reportOnDuplicates(names)
+
+            Expr.ofTupleFromSeq(exprs) match
+              case '{ type mirroredElems <: Tuple; $mirroredElemsExpr: mirroredElems } =>
                 '{
                   new Made.Sum:
                     type MirroredType = T
@@ -722,4 +725,3 @@ object Made:
   private sealed trait TransparentWorkaround[T, U] extends Made.Transparent:
     final type MirroredType = T
     final type MirroredElemType = U
-

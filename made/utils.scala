@@ -27,6 +27,12 @@ private[made] def stringToType(str: String)(using quotes: Quotes): Type[? <: Str
   import quotes.reflect.*
   ConstantType(StringConstant(str)).asType.asInstanceOf[Type[? <: String]]
 
+private[made] def typeToString[S <: String: Type](using quotes: Quotes): S =
+  import quotes.reflect.*
+  TypeRepr.of[S] match
+    case ConstantType(StringConstant(str)) => str.asInstanceOf[S]
+    case _ => report.errorAndAbort(s"Unsupported singleton type: ${Type.show[S]}")
+
 private[made] def traverseTypes(tpes: List[Type[? <: AnyKind]])(using Quotes): Type[? <: Tuple] =
   val empty: Type[? <: Tuple] = Type.of[EmptyTuple]
   tpes.foldRight(empty):
@@ -52,3 +58,10 @@ def getAnnotationImpl[A <: MetaAnnotation: Type, Self <: { type Metadata <: Meta
 
 def hasAnnotationImpl[A <: MetaAnnotation: Type, Self <: { type Metadata <: Meta }: Type](using quotes: Quotes)
   : Expr[Boolean] = Expr(getAnnotationImpl[A, Self].isExprOf[Some[A]])
+
+def reportOnDuplicates(labels: Seq[(label: String, original: String)])(using quotes: Quotes): Unit =
+  import quotes.reflect.*
+  labels
+    .groupMap(_.label)(_.original)
+    .foreach: (label, originals) =>
+      if originals.sizeIs > 1 then report.error(s"${originals.mkString(", ")} have the same @name: $label")
