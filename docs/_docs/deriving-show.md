@@ -75,15 +75,15 @@ object Show:
 Product derivation is the core Made pattern. Given a mirror for a product type `T`, you extract field labels and types
 at compile time, then zip them with the product's field values at runtime to build the string representation.
 
-The derivation function must be `inline` because extracting labels from Made's type-level `MirroredLabel` and
+The derivation function must be `inline` because extracting labels from Made's type-level `Label` and
 `MirroredElemLabels` requires `constValue` and `constValueTuple`, which only work in inline context. The mirror
 parameter is typed as `Made.ProductOf[T]` - a type alias for `Made.Product { type MirroredType = T }`. By passing the
-mirror explicitly, the compiler sees the fully refined type (including `MirroredLabel` and `MirroredElemLabels`) at the
+mirror explicitly, the compiler sees the fully refined type (including `Label` and `MirroredElemLabels`) at the
 inline expansion site.
 
 The steps are:
 
-1. Use `constValue[m.MirroredLabel]` to get the type name as a runtime string.
+1. Use `constValue[m.Label]` to get the type name as a runtime string.
 2. Use `constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]` to materialise field labels.
 3. Use `compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]]` to resolve `Show` instances for each field at
    compile time - no manual instance list needed.
@@ -96,7 +96,7 @@ function is:
 
 ```scala sc:nocompile sc-name:derive-product
 inline def deriveProduct[T <: Product](m: Made.ProductOf[T]): Show[T] = value =>
-  val typeName = compiletime.constValue[m.MirroredLabel]
+  val typeName = compiletime.constValue[m.Label]
   val labels = compiletime.constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]
   val values = value.productIterator.toList
   val fieldShows = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
@@ -174,8 +174,8 @@ fields or subtypes to iterate. The singleton instance is available via `value`.
 For `Show`, a singleton simply outputs its type label. Sum derivation already handles singletons via `ClassTag`
 matching, but standalone singleton mirrors let you extract the label directly.
 
-```scala sc:nocompile sc-name:derive-singleton
-inline def deriveSingleton[T](m: Made.SingletonOf[T]): Show[T] = _ => compiletime.constValue[m.MirroredLabel]
+```scala
+inline def deriveSingleton[T](m: Made.SingletonOf[T]): Show[T] = _ => compiletime.constValue[m.Label]
 ```
 
 In practice, standalone singleton derivation is rare. Most singletons appear as sum type subtypes, where the `ClassTag`

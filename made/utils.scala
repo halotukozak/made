@@ -1,8 +1,5 @@
 package made
 
-import made.annotation.MetaAnnotation
-
-import scala.annotation.tailrec
 import scala.quoted.*
 
 extension (comp: Expr.type)
@@ -42,22 +39,6 @@ private[made] def traverseTypes(tpes: List[Type[? <: AnyKind]])(using Quotes): T
 private[made] def traverseTuple(tpe: Type[? <: Tuple])(using quotes: Quotes): List[Type[? <: AnyKind]] = tpe match
   case '[EmptyTuple] => Nil
   case '[t *: ts] => Type.of[t] :: traverseTuple(Type.of[ts])
-
-def getAnnotationImpl[A <: MetaAnnotation: Type, Self <: { type Metadata <: Meta }: Type](using quotes: Quotes)
-  : Expr[Option[A]] =
-  import quotes.reflect.*
-
-  @tailrec def loop(tpe: TypeRepr): Option[Expr[A]] = tpe match
-    case AnnotatedType(_, annot) if annot.tpe <:< TypeRepr.of[A] => Some(annot.asExprOf[A])
-    case AnnotatedType(underlying, _) => loop(underlying)
-    case _ => None
-
-  Type.of[Self] match
-    case '[type meta <: Meta; { type Metadata <: meta }] =>
-      Expr.ofOption(loop(TypeRepr.of[meta]))
-
-def hasAnnotationImpl[A <: MetaAnnotation: Type, Self <: { type Metadata <: Meta }: Type](using quotes: Quotes)
-  : Expr[Boolean] = Expr(getAnnotationImpl[A, Self].isExprOf[Some[A]])
 
 def reportOnDuplicates(labels: Seq[(label: String, original: String)])(using quotes: Quotes): Unit =
   import quotes.reflect.*

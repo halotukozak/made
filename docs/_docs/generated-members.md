@@ -55,7 +55,7 @@ never encounter `display`.
 ## GeneratedMadeElem API
 
 `GeneratedMadeElem` extends `MadeFieldElem` (which extends `MadeElem`). It inherits the standard type members:
-`MirroredType` is the return type of the generated member, `MirroredLabel` is its name, and `Metadata` is the annotation
+`MirroredType` is the return type of the generated member, `Label` is its name, and `Metadata` is the annotation
 chain (which always includes `@generated` since the annotation itself extends `MetaAnnotation`).
 
 `GeneratedMadeElem` adds one unique type member and one unique method.
@@ -171,7 +171,7 @@ object Describe:
       val gen = elem.asInstanceOf[GeneratedMadeElem.OuterOf[T]]
       gen(instance)
 
-    val typeName = compiletime.constValue[mirror.MirroredLabel]
+    val typeName = compiletime.constValue[mirror.Label]
 
     (fieldEntries ++ genEntries).mkString(s"$typeName(\n", ",\n", "\n)")
 
