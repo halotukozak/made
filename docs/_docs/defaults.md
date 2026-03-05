@@ -8,7 +8,7 @@ order: 3
 This guide explains how Made resolves default values for product fields during derivation. When you derive a type class
 that constructs product instances from partial data - a JSON decoder, a config loader, a builder - you need to know
 which fields have fallback values and what those values are. Made makes this available through `MadeFieldElem.default`,
-a method on each field element that returns `Option[MirroredType]` resolved at compile time.
+a method on each field element that returns `Option[Type]` resolved at compile time.
 
 The default value for each field is determined by a three-level priority chain. The Made macro inspects annotations and
 constructor signatures at compile time, selects the highest-priority source, and bakes the result into the field

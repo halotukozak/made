@@ -5,7 +5,6 @@ import made.annotation.MetaAnnotation
 import scala.annotation.{publicInBinary, tailrec}
 import scala.quoted.*
 
-
 extension [M <: Meta](self: { type Metadata = M })
   /**
    * Returns `true` if the mirror's `Metadata` type member contains an annotation of type `A`.
@@ -30,7 +29,11 @@ extension [L <: String](l: { type Label = L })
    * Returns the label of the mirror.
    */
   inline def label: L = compiletime.constValue[L]
-extension [Ls <: Tuple ](l: { type ElemLabels = Ls })
+
+extension [Ls <: Tuple](l: { type ElemLabels = Ls })
+  /**
+   * Returns the labels of the mirror's elements.
+   */
   inline def elemLabels: Ls = compiletime.constValueTuple[Ls]
 
 @publicInBinary private def getAnnotationImpl[A <: MetaAnnotation: Type, M <: Meta: Type](using quotes: Quotes)

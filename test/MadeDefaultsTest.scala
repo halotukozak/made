@@ -4,19 +4,19 @@ import made.annotation.*
 class MadeDefaultsTest extends munit.FunSuite:
   test("case class with defaults") {
     val m: Made.Product {
-      type MirroredType = WithDefaults
+      type Type = WithDefaults
       type Label = "WithDefaults"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
-        type MirroredType = Int
+        type Type = Int
         type Label = "x"
         type Metadata = Meta
       } *: MadeFieldElem {
-        type MirroredType = String
+        type Type = String
         type Label = "y"
         type Metadata = Meta
       } *: MadeFieldElem {
-        type MirroredType = Boolean
+        type Type = Boolean
         type Label = "z"
         type Metadata = Meta
       } *: EmptyTuple
@@ -31,15 +31,15 @@ class MadeDefaultsTest extends munit.FunSuite:
 
   test("case class with all defaults") {
     val m: Made.Product {
-      type MirroredType = AllDefaults
+      type Type = AllDefaults
       type Label = "AllDefaults"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
-        type MirroredType = Int
+        type Type = Int
         type Label = "a"
         type Metadata = Meta
       } *: MadeFieldElem {
-        type MirroredType = String
+        type Type = String
         type Label = "b"
         type Metadata = Meta
       } *: EmptyTuple
@@ -53,15 +53,15 @@ class MadeDefaultsTest extends munit.FunSuite:
 
   test("case class with mixed defaults") {
     val m: Made.Product {
-      type MirroredType = MixedDefaults
+      type Type = MixedDefaults
       type Label = "MixedDefaults"
       type Metadata = Meta
       type MirroredElems = MadeFieldElem {
-        type MirroredType = Int
+        type Type = Int
         type Label = "required"
         type Metadata = Meta
       } *: MadeFieldElem {
-        type MirroredType = String
+        type Type = String
         type Label = "optional"
         type Metadata = Meta
       } *: EmptyTuple

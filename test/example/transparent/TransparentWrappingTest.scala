@@ -45,7 +45,7 @@ class TransparentWrappingTest extends munit.FunSuite:
 
       @nowarn("msg=New anonymous class")
       inline def deriveTransparent[T](m: Made.TransparentOf[T]): Codec[T] =
-        val innerCodec = compiletime.summonInline[Codec[m.MirroredElemType]]
+        val innerCodec = compiletime.summonInline[Codec[m.ElemType]]
         new Codec[T]:
           def encode(value: T): String = innerCodec.encode(m.unwrap(value))
           def decode(raw: String): T = m.wrap(innerCodec.decode(raw))

@@ -8,15 +8,15 @@ class GeneratedAnnotationTest extends munit.FunSuite:
     val mirror = Made.derived[Prod]
 
     type Expected = GeneratedMadeElem {
-      type MirroredType = String
+      type Type = String
       type Label = "ab"
       type Metadata = Meta @generated
-      type OuterMirroredType = Prod
+      type OuterType = Prod
     } *: GeneratedMadeElem {
-      type MirroredType = Int
+      type Type = Int
       type Label = "len"
       type Metadata = Meta @generated
-      type OuterMirroredType = Prod
+      type OuterType = Prod
     } *: EmptyTuple
 
     summon[mirror.GeneratedElems =:= Expected]
@@ -31,10 +31,10 @@ class GeneratedAnnotationTest extends munit.FunSuite:
     val mirror = Made.derived[VC]
 
     type Expected = GeneratedMadeElem {
-      type MirroredType = String
+      type Type = String
       type Label = "upper"
       type Metadata = Meta @generated
-      type OuterMirroredType = VC
+      type OuterType = VC
     } *: EmptyTuple
 
     summon[mirror.GeneratedElems =:= Expected]
@@ -47,10 +47,10 @@ class GeneratedAnnotationTest extends munit.FunSuite:
     val mirror = Made.derived[SumADT]
 
     type Expected = GeneratedMadeElem {
-      type MirroredType = Int
+      type Type = Int
       type Label = "const"
       type Metadata = Meta @generated
-      type OuterMirroredType = SumADT
+      type OuterType = SumADT
     } *: EmptyTuple
 
     summon[mirror.GeneratedElems =:= Expected]
@@ -64,10 +64,10 @@ class GeneratedAnnotationTest extends munit.FunSuite:
     val mirror = Made.derived[GenEnum]
 
     type Expected = GeneratedMadeElem {
-      type MirroredType = String
+      type Type = String
       type Label = "info"
       type Metadata = Meta @generated
-      type OuterMirroredType = GenEnum
+      type OuterType = GenEnum
     } *: EmptyTuple
 
     summon[mirror.GeneratedElems =:= Expected]
@@ -81,10 +81,10 @@ class GeneratedAnnotationTest extends munit.FunSuite:
     val mirror = Made.derived[GenObj.type]
 
     type Expected = GeneratedMadeElem {
-      type MirroredType = Int
+      type Type = Int
       type Label = "id"
       type Metadata = Meta @generated
-      type OuterMirroredType = GenObj.type
+      type OuterType = GenObj.type
     } *: EmptyTuple
 
     summon[mirror.GeneratedElems =:= Expected]

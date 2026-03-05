@@ -23,20 +23,20 @@ object Show:
     val typeName = compiletime.constValue[m.Label]
     val labels = compiletime.constValueTuple[m.ElemLabels].toList.asInstanceOf[List[String]]
     val values = value.productIterator.toList
-    val fieldShows = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
+    val fieldShows = compiletime.summonAll[Tuple.Map[m.ElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
     val fields = labels.lazyZip(values).lazyZip(fieldShows).map((label, value, s) => s"$label = ${s.show(value)}")
 
     s"$typeName(${fields.mkString(", ")})"
 
   inline def deriveTransparent[T](m: Made.TransparentOf[T]): Show[T] = value =>
-    val underlyingShow = compiletime.summonInline[Show[m.MirroredElemType]]
+    val underlyingShow = compiletime.summonInline[Show[m.ElemType]]
     val inner = m.unwrap(value)
     underlyingShow.show(inner)
 
   inline def deriveSum[T](m: Made.SumOf[T]): Show[T] = value =>
     val subtypeClasses =
-      compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, ClassTag]].toList.asInstanceOf[List[ClassTag[?]]]
-    val subtypeShows = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
+      compiletime.summonAll[Tuple.Map[m.ElemTypes, ClassTag]].toList.asInstanceOf[List[ClassTag[?]]]
+    val subtypeShows = compiletime.summonAll[Tuple.Map[m.ElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
 
     subtypeClasses
       .lazyZip(subtypeShows)

@@ -22,7 +22,7 @@ import scala.quoted.*
  *
  * val mirror: Made.Of[User] = Made.derived[User]
  * // mirror type members:
- * //   type MirroredType = User
+ * //   type Type = User
  * //   type Label = "User"
  * //   type Metadata = Meta
  * //   type Elems = MadeFieldElem { ... } *: MadeFieldElem { ... } *: EmptyTuple
@@ -47,7 +47,7 @@ sealed trait Made:
   final type ElemLabels = Tuple.Map[Elems, MadeElem.ExtractLabel]
 
   /** The mirrored type `T`. */
-  type MirroredType
+  type Type
 
   /** The simple name of `T` (or the override provided by `@name`). */
   type Label <: String
@@ -88,8 +88,8 @@ sealed trait Made:
  *
  * val mirror = Made.derived[User]
  * val (nameFld, ageFld) = mirror.elems
- * // nameFld: MadeFieldElem { type MirroredType = String; type Label = "name" }
- * // ageFld:  MadeFieldElem { type MirroredType = Int;    type Label = "age"  }
+ * // nameFld: MadeFieldElem { type Type = String; type Label = "name" }
+ * // ageFld:  MadeFieldElem { type Type = Int;    type Label = "age"  }
  * }}}
  *
  * @see [[MadeFieldElem]]
@@ -99,7 +99,7 @@ sealed trait Made:
  */
 sealed trait MadeElem:
   /** The element's type (field type or subtype). */
-  type MirroredType
+  type Type
 
   /** The element's label (field name or subtype name, or the override provided by `@name`). */
   type Label <: String
@@ -134,10 +134,10 @@ sealed trait MadeFieldElem extends MadeElem:
    *
    * @return the default value if available, `None` otherwise
    */
-  def default: Option[MirroredType]
+  def default: Option[Type]
 
 object MadeFieldElem:
-  type Of[T] = MadeFieldElem { type MirroredType = T }
+  type Of[T] = MadeFieldElem { type Type = T }
 
 /**
  * Element representing a non-singleton subtype in a sum type mirror.
@@ -155,7 +155,7 @@ object MadeFieldElem:
 sealed trait MadeSubElem extends MadeElem
 
 object MadeSubElem:
-  type Of[T] = MadeSubElem { type MirroredType = T }
+  type Of[T] = MadeSubElem { type Type = T }
 
 /**
  * Element representing a singleton subtype in a sum type mirror.
@@ -170,10 +170,10 @@ object MadeSubElem:
  */
 sealed trait MadeSubSingletonElem extends MadeSubElem:
   /** Returns the singleton instance. */
-  def value: MirroredType
+  def value: Type
 
 object MadeSubSingletonElem:
-  type Of[T] = MadeSubSingletonElem { type MirroredType = T }
+  type Of[T] = MadeSubSingletonElem { type Type = T }
 
 /**
  * Element representing a [[generated]] val or def.
@@ -188,25 +188,25 @@ object MadeSubSingletonElem:
  */
 sealed trait GeneratedMadeElem extends MadeFieldElem:
   /** The type that declares the [[generated]] member. */
-  type OuterMirroredType
+  type OuterType
 
   /** Computes the generated value from an instance of the declaring type. */
-  def apply(outer: OuterMirroredType): MirroredType
+  def apply(outer: OuterType): Type
 
   /** Always `None`; generated members have no constructor defaults. */
-  final def default: Option[MirroredType] = None
+  final def default: Option[Type] = None
 
 object GeneratedMadeElem:
-  type Of[T] = GeneratedMadeElem { type MirroredType = T }
-  type OuterOf[Outer] = GeneratedMadeElem { type OuterMirroredType = Outer }
+  type Of[T] = GeneratedMadeElem { type Type = T }
+  type OuterOf[Outer] = GeneratedMadeElem { type OuterType = Outer }
 
 // workaround for https://github.com/scala/scala3/issues/25245
 private sealed trait GeneratedMadeElemWorkaround[Outer, Elem] extends GeneratedMadeElem:
-  final type OuterMirroredType = Outer
-  final type MirroredType = Elem
+  final type OuterType = Outer
+  final type Type = Elem
 
 object MadeElem:
-  type Of[T] = MadeElem { type MirroredType = T }
+  type Of[T] = MadeElem { type Type = T }
   type LabelOf[l <: String] = MadeElem { type Label = l }
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
 
@@ -221,11 +221,11 @@ object MadeElem:
 private trait Meta
 
 object Made:
-  type Of[T] = Made { type MirroredType = T }
-  type ProductOf[T] = Made.Product { type MirroredType = T }
-  type SumOf[T] = Made.Sum { type MirroredType = T }
-  type SingletonOf[T] = Made.Singleton { type MirroredType = T }
-  type TransparentOf[T] = Made.Transparent { type MirroredType = T; }
+  type Of[T] = Made { type Type = T }
+  type ProductOf[T] = Made.Product { type Type = T }
+  type SumOf[T] = Made.Sum { type Type = T }
+  type SingletonOf[T] = Made.Singleton { type Type = T }
+  type TransparentOf[T] = Made.Transparent { type Type = T; }
 
   type LabelOf[l <: String] = MadeElem { type Label = l }
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
@@ -317,10 +317,10 @@ object Made:
               type Metadata = meta
               def apply(outer: T): elemTpe = ${ '{ outer }.asTerm.select(member).asExprOf[elemTpe] }
             : GeneratedMadeElem {
-              type MirroredType = elemTpe
+              type Type = elemTpe
               type Label = elemLabel
               type Metadata = meta
-              type OuterMirroredType = T
+              type OuterType = T
             }
           }
 
@@ -333,7 +333,7 @@ object Made:
         case ('[fieldType], '[type elemLabel <: String; elemLabel], '[type fieldMeta <: Meta; fieldMeta]) =>
           '{
             new MadeFieldElem:
-              type MirroredType = fieldType
+              type Type = fieldType
               type Label = elemLabel
               type Metadata = fieldMeta
 
@@ -388,7 +388,7 @@ object Made:
             case '[type s <: scala.Singleton; s] =>
               '{
                 new Made.Singleton:
-                  type MirroredType = s
+                  type Type = s
                   type Label = label
                   type Metadata = meta
                   type GeneratedElems = generatedElems
@@ -406,7 +406,7 @@ object Made:
             case '[Unit] =>
               '{
                 new Made.Singleton:
-                  type MirroredType = Unit
+                  type Type = Unit
                   type Label = label
                   type Metadata = meta
                   type GeneratedElems = generatedElems
@@ -446,8 +446,8 @@ object Made:
                   type Elems = madeFieldElem *: EmptyTuple
                   def elems: Elems = $madeFieldExpr *: EmptyTuple
 
-                  def unwrap(value: MirroredType): ElemType = tw.unwrap(value)
-                  def wrap(value: ElemType): MirroredType = tw.wrap(value)
+                  def unwrap(value: Type): ElemType = tw.unwrap(value)
+                  def wrap(value: ElemType): Type = tw.wrap(value)
                 : Made.TransparentOf[T] {
                   type Label = label
                   type ElemType = fieldType
@@ -467,7 +467,7 @@ object Made:
               '{
                 new Made.Product:
                   type Label = label
-                  type MirroredType = T
+                  type Type = T
                   type Metadata = meta
 
                   type Elems = madeFieldElem *: EmptyTuple
@@ -506,7 +506,7 @@ object Made:
                     case ('[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
                       val expr = '{
                         new MadeFieldElem:
-                          type MirroredType = fieldTpe
+                          type Type = fieldTpe
                           type Label = elemLabel
                           type Metadata = meta
 
@@ -521,7 +521,7 @@ object Made:
               case '{ type mirroredElems <: Tuple; $mirroredElemsExpr: mirroredElems } =>
                 '{
                   new Made.Product:
-                    type MirroredType = T
+                    type Type = T
                     type Label = label
                     type Metadata = meta
                     type Elems = mirroredElems
@@ -563,7 +563,7 @@ object Made:
                         case '[type s <: scala.Singleton; s] =>
                           '{
                             new MadeSubSingletonElem:
-                              type MirroredType = s
+                              type Type = s
                               type Label = elemLabel
                               type Metadata = meta
 
@@ -572,7 +572,7 @@ object Made:
                         case '[s] =>
                           '{
                             new MadeSubElem:
-                              type MirroredType = subType
+                              type Type = subType
                               type Label = elemLabel
                               type Metadata = meta
                           }
@@ -585,7 +585,7 @@ object Made:
               case '{ type mirroredElems <: Tuple; $mirroredElemsExpr: mirroredElems } =>
                 '{
                   new Made.Sum:
-                    type MirroredType = T
+                    type Type = T
                     type Label = label
                     type Metadata = meta
                     type Elems = mirroredElems
@@ -627,8 +627,8 @@ object Made:
    * @see [[GeneratedMadeElem]]
    */
   sealed trait Product extends Made:
-    /** Constructs an instance of `MirroredType` from an untyped array of field values. */
-    def fromUnsafeArray(product: Array[Any]): MirroredType
+    /** Constructs an instance of `Type` from an untyped array of field values. */
+    def fromUnsafeArray(product: Array[Any]): Type
 
   /**
    * Mirror for sum types (sealed traits and enums).
@@ -663,7 +663,7 @@ object Made:
     final type Elems = EmptyTuple
 
     /** Returns the singleton instance. */
-    def value: MirroredType
+    def value: Type
     final def elems: Elems = EmptyTuple
 
   /**
@@ -688,14 +688,14 @@ object Made:
     type Elems <: MadeElem.Of[ElemType] *: EmptyTuple
 
     /** Extracts the wrapped value. */
-    def unwrap(value: MirroredType): ElemType
+    def unwrap(value: Type): ElemType
 
     /** Wraps a value into the transparent type. */
-    def wrap(value: ElemType): MirroredType
+    def wrap(value: ElemType): Type
 
     final def generatedElems: GeneratedElems = EmptyTuple
 
   // workaround for https://github.com/scala/scala3/issues/25245
   private sealed trait TransparentWorkaround[T, U] extends Made.Transparent:
-    final type MirroredType = T
+    final type Type = T
     final type ElemType = U
