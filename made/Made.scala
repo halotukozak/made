@@ -494,7 +494,7 @@ object Made:
 
                 $m: Mirror.ProductOf[T] {
                   type MirroredLabel = label
-                  type ElemTypes = mirroredElemTypes
+                  type MirroredElemTypes = mirroredElemTypes
                 }
               } =>
 
@@ -547,7 +547,7 @@ object Made:
 
                 $_ : Mirror.SumOf[T] {
                   type MirroredLabel = label
-                  type ElemTypes = mirroredElemTypes
+                  type MirroredElemTypes = mirroredElemTypes
                 }
               } =>
 

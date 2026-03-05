@@ -7,7 +7,7 @@ class MadeDefaultsTest extends munit.FunSuite:
       type Type = WithDefaults
       type Label = "WithDefaults"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = Int
         type Label = "x"
         type Metadata = Meta
@@ -34,7 +34,7 @@ class MadeDefaultsTest extends munit.FunSuite:
       type Type = AllDefaults
       type Label = "AllDefaults"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = Int
         type Label = "a"
         type Metadata = Meta
@@ -56,7 +56,7 @@ class MadeDefaultsTest extends munit.FunSuite:
       type Type = MixedDefaults
       type Label = "MixedDefaults"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = Int
         type Label = "required"
         type Metadata = Meta

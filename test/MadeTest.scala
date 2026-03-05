@@ -8,7 +8,7 @@ class MadeTest extends munit.FunSuite:
     val _: Made {
       type Type = SimpleCaseClass
       type Label = "SimpleCaseClass"
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = Long
         type Label = "id"
         type Metadata = Meta
@@ -26,7 +26,7 @@ class MadeTest extends munit.FunSuite:
       type Type = NoFields
       type Label = "NoFields"
       type Metadata = Meta
-      type MirroredElems = EmptyTuple
+      type Elems = EmptyTuple
     } = Made.derived[NoFields]
   }
 
@@ -35,7 +35,7 @@ class MadeTest extends munit.FunSuite:
       type Type = Box[Int]
       type Label = "Box"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = Int
         type Label = "a"
         type Metadata = Meta
@@ -48,7 +48,7 @@ class MadeTest extends munit.FunSuite:
       type Type = SimpleEnum
       type Label = "SimpleEnum"
       type Metadata = Meta
-      type MirroredElems = MadeSubSingletonElem {
+      type Elems = MadeSubSingletonElem {
         type Type = SimpleEnum.Case1.type
         type Label = "Case1"
         type Metadata = Meta
@@ -65,7 +65,7 @@ class MadeTest extends munit.FunSuite:
       type Type = SimpleObject.type
       type Label = "SimpleObject"
       type Metadata = Meta
-      type MirroredElems = EmptyTuple
+      type Elems = EmptyTuple
     } = Made.derived[SimpleObject.type]
 
     assert(mirror.value == SimpleObject)
@@ -95,7 +95,7 @@ class MadeTest extends munit.FunSuite:
       type Label = "TransparentClass"
       type Metadata = Meta @transparent
       type ElemType = Int
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = Int
         type Label = "int"
         type Metadata = Meta
@@ -143,7 +143,7 @@ class MadeTest extends munit.FunSuite:
       type Type = NamedEnum
       type Label = "NamedEnum"
       type Metadata = Meta
-      type MirroredElems <: MadeElem {
+      type Elems <: MadeElem {
         type Type = NamedEnum.Case1.type
         type Label = "C1"
 //        type Metadata = Meta @name("C1")
@@ -160,7 +160,7 @@ class MadeTest extends munit.FunSuite:
       type Type = Recursive
       type Label = "Recursive"
       type Metadata = Meta
-      type MirroredElems = MadeSubSingletonElem {
+      type Elems = MadeSubSingletonElem {
         type Type = Recursive.End.type
         type Label = "End"
         type Metadata = Meta
@@ -177,7 +177,7 @@ class MadeTest extends munit.FunSuite:
       type Type = MixedADT
       type Label = "MixedADT"
       type Metadata = Meta
-      type MirroredElems = MadeSubElem {
+      type Elems = MadeSubElem {
         type Type = MixedADT.CaseClass
         type Label = "CaseClass"
         type Metadata = Meta
@@ -194,7 +194,7 @@ class MadeTest extends munit.FunSuite:
       type Type = HasGenerated
       type Label = "HasGenerated"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = String
         type Label = "str"
         type Metadata = Meta
@@ -216,7 +216,7 @@ class MadeTest extends munit.FunSuite:
       type Type = HKBox[List]
       type Label = "HKBox"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = List[Int]
         type Label = "fa"
         type Metadata = Meta
@@ -229,7 +229,7 @@ class MadeTest extends munit.FunSuite:
       type Type = HKADT[List, Int]
       type Label = "HKADT"
       type Metadata = Meta
-      type MirroredElems = MadeSubElem {
+      type Elems = MadeSubElem {
         type Type = HKADT.Case1[List, Int]
         type Label = "Case1"
         type Metadata = Meta
@@ -246,7 +246,7 @@ class MadeTest extends munit.FunSuite:
       type Type = Recursive.Next
       type Label = "Next"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = Recursive
         type Label = "r"
         type Metadata = Meta
@@ -265,7 +265,7 @@ class MadeTest extends munit.FunSuite:
       type Type = RecTree
       type Label = "RecTree"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
+      type Elems = MadeFieldElem {
         type Type = Int
         type Label = "value"
         type Metadata = Meta
@@ -294,7 +294,7 @@ class MadeTest extends munit.FunSuite:
       type Type = Box[?]
       type Label = "Box"
       type Metadata = Meta;
-      type MirroredElems <: MadeElem {
+      type Elems <: MadeElem {
         type Label = "a"
         type Metadata = Meta
       } *: EmptyTuple
