@@ -116,7 +116,7 @@ class LabelTest extends munit.FunSuite:
 
   test("elemLabels for transparent class") {
     val mirror = Made.derived[TransparentClass]
-    val labels: ("int" *: EmptyTuple) = mirror.elemLabels
+    val labels: "int" *: EmptyTuple = mirror.elemLabels
     assertEquals(labels, "int" *: EmptyTuple)
   }
 
@@ -128,7 +128,7 @@ class LabelTest extends munit.FunSuite:
 
   test("elemLabels for value class") {
     val mirror = Made.derived[ValueClass]
-    val labels: ("str" *: EmptyTuple) = mirror.elemLabels
+    val labels: "str" *: EmptyTuple = mirror.elemLabels
     assertEquals(labels, "str" *: EmptyTuple)
   }
 
@@ -140,7 +140,7 @@ class LabelTest extends munit.FunSuite:
 
   test("elemLabels with inherited @name") {
     val mirror = Made.derived[InheritedName]
-    val labels: ("customName" *: EmptyTuple) = mirror.elemLabels
+    val labels: "customName" *: EmptyTuple = mirror.elemLabels
     assertEquals(labels, "customName" *: EmptyTuple)
   }
 
