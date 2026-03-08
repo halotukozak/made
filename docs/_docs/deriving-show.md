@@ -205,7 +205,7 @@ mirror subtype at the inline expansion site, so these pattern matches are exhaus
 The `derives` clause on a type definition triggers this: writing `case class User(...) derives Show` causes the compiler
 to look for `Show.derived`, passing the `Made.Of[User]` instance as the using parameter.
 
-```scala sc-name:show-derived sc-compile-with:derive-product,derive-transparent,derive-sum,derive-singleton
+```scala sc-name:show-derived sc:nocompile
 inline def derived[T](using m: Made.Of[T]): Show[T] = inline m match
   case m: Made.ProductOf[T & Product] => deriveProduct(m).asInstanceOf[Show[T]]
   case m: Made.SumOf[T] => deriveSum(m)
@@ -216,71 +216,21 @@ inline def derived[T](using m: Made.Of[T]): Show[T] = inline m match
 The product branch uses `T & Product` as the type bound because `Made.ProductOf[T]` requires its `T` to extend
 `Product`. The `.asInstanceOf[Show[T]]` cast bridges the `Show[T & Product]` return type back to `Show[T]`.
 
-With this dispatcher in place, calling `Show.derived[User]` passes `Made.Of[User]` (which is a `Made.ProductOf[T]` at
+With this dispatcher in place, calling `derived[User]` passes `Made.Of[User]` (which is a `Made.ProductOf[T]` at
 runtime) and the `inline match` routes to `deriveProduct`.
 
-```scala sc-name:show-full
-import made.*
-import made.annotation.transparent
-import scala.compiletime.*
-import scala.reflect.ClassTag
+```scala sc:nocompile
+given Show[Circle] = derived[Circle]
+given Show[Rectangle] = derived[Rectangle]
+given Show[Point.type] = derived[Point.type]
 
-trait Show[T]:
-  def show(value: T): String
-
-object Show:
-  given Show[String] = (value: String) => value
-  given Show[Int] = (value: Int) => value.toString
-  given Show[Long] = (value: Long) => value.toString
-  given Show[Double] = (value: Double) => value.toString
-  given Show[Boolean] = (value: Boolean) => value.toString
-
-  inline def deriveProduct[T <: Product](m: Made.ProductOf[T]): Show[T] = value =>
-    val typeName = compiletime.constValue[m.Label]
-    val labels = compiletime.constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]
-    val values = value.productIterator.toList
-    val fieldShows = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
-    val fields = labels.lazyZip(values).lazyZip(fieldShows).map((label, value, s) => s"$label = ${s.show(value)}")
-    s"$typeName(${fields.mkString(", ")})"
-
-  inline def deriveTransparent[T](m: Made.TransparentOf[T]): Show[T] = value =>
-    val underlyingShow = compiletime.summonInline[Show[m.MirroredElemType]]
-    val inner = m.unwrap(value)
-    underlyingShow.show(inner)
-
-  inline def deriveSum[T](m: Made.SumOf[T]): Show[T] = value =>
-    val subtypeClasses = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, ClassTag]].toList.asInstanceOf[List[ClassTag[?]]]
-    val subtypeShows = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
-    subtypeClasses
-      .lazyZip(subtypeShows)
-      .collectFirst:
-        case (clazz, s) if clazz.unapply(value).isDefined => s.show(value)
-      .getOrElse(throw IllegalStateException("Unable to find subtype"))
-
-  inline def deriveSingleton[T](m: Made.SingletonOf[T]): Show[T] = _ => compiletime.constValue[m.Label]
-
-  inline def derived[T](using m: Made.Of[T]): Show[T] = inline m match
-    case m: Made.ProductOf[T & Product] => deriveProduct(m).asInstanceOf[Show[T]]
-    case m: Made.SumOf[T] => deriveSum(m)
-    case m: Made.SingletonOf[T] => deriveSingleton(m)
-    case m: Made.TransparentOf[T] => deriveTransparent(m)
-```
-
-The above combines all derivation helpers into the `Show` companion object, which is required for the `derives` clause
-to work. Each helper method is identical to its standalone version shown earlier.
-
-```scala sc-compile-with:show-full,user,email,shape
-given Show[Circle] = Show.derived[Circle]
-given Show[Rectangle] = Show.derived[Rectangle]
-given Show[Point.type] = Show.derived[Point.type]
-
-val userShow = Show.derived[User]
+val userShow = derived[User]
 assert(userShow.show(User("Alice", 30)) == "User(name = Alice, age = 30)")
 
-val emailShow = Show.derived[Email]
+val emailShow = derived[Email]
 assert(emailShow.show(Email("alice@example.com")) == "alice@example.com")
 
-val shapeShow: Show[Shape] = Show.derived[Shape]
+val shapeShow: Show[Shape] = derived[Shape]
 assert(shapeShow.show(Point) == "Point")
 assert(shapeShow.show(Circle(3.14)) == "Circle(radius = 3.14)")
 assert(shapeShow.show(Rectangle(2.0, 5.0)) == "Rectangle(width = 2.0, height = 5.0)")
@@ -289,15 +239,15 @@ assert(shapeShow.show(Rectangle(2.0, 5.0)) == "Rectangle(width = 2.0, height = 5
 Note that sum derivation requires `Show` instances for each subtype to be in scope before deriving the sum itself.
 The `given` declarations for `Circle`, `Rectangle`, and `Point.type` provide these.
 
-```scala sc-compile-with:show-full,user,email,shape,origin
-given Show[Circle] = Show.derived[Circle]
-given Show[Rectangle] = Show.derived[Rectangle]
-given Show[Point.type] = Show.derived[Point.type]
+```scala sc:nocompile
+given Show[Circle] = derived[Circle]
+given Show[Rectangle] = derived[Rectangle]
+given Show[Point.type] = derived[Point.type]
 
-val userShow = Show.derived[User]
-val emailShow = Show.derived[Email]
-val shapeShow: Show[Shape] = Show.derived[Shape]
-val originShow = Show.derived[Origin.type]
+val userShow = derived[User]
+val emailShow = derived[Email]
+val shapeShow: Show[Shape] = derived[Shape]
+val originShow = derived[Origin.type]
 
 println(userShow.show(User("Alice", 30)))
 println(emailShow.show(Email("alice@example.com")))
@@ -318,10 +268,9 @@ Rectangle(width = 2.0, height = 5.0)
 Origin
 ```
 
-To adapt this for a different type class, replace the `Show` trait and primitive instances with your type class, keep
-the same `inline def derived` structure with its four-way mirror match, and adjust the per-branch logic. The product
-branch iterates field labels and values. The sum branch dispatches on subtype classes. The singleton branch returns a
-fixed value. The transparent branch delegates to the inner type.
+In a production implementation, these helpers live inside the `Show` companion object so that
+`case class Foo(...) derives Show` can find `Show.derived` automatically. The test suite in
+`test/example/show/Show.scala` shows the complete companion-based version.
 
 This guide covers the fundamentals. A production-ready derivation would also handle e.g. recursive types (e.g.,
 `Tree` with `Branch(left: Tree, right: Tree)`), collection fields like `List[T]` or `Option[T]`, and caching of
