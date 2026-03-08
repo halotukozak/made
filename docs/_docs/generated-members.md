@@ -41,7 +41,7 @@ case class Measurement(value: Double, unit: String):
   @generated def display: String = s"$value $unit"
 
 val mirror = Made.derived[Measurement]
-val (valueFld, unitFld) = mirror.mirroredElems
+val (valueFld, unitFld) = mirror.elems
 val displayGen *: EmptyTuple = mirror.generatedElems
 
 val m = Measurement(9.81, "m/s")
@@ -55,23 +55,23 @@ never encounter `display`.
 ## GeneratedMadeElem API
 
 `GeneratedMadeElem` extends `MadeFieldElem` (which extends `MadeElem`). It inherits the standard type members:
-`MirroredType` is the return type of the generated member, `Label` is its name, and `Metadata` is the annotation
+`Type` is the return type of the generated member, `Label` is its name, and `Metadata` is the annotation
 chain (which always includes `@generated` since the annotation itself extends `MetaAnnotation`).
 
 `GeneratedMadeElem` adds one unique type member and one unique method.
 
-`type OuterMirroredType` is the type that declares the `@generated` member. For a generated def on
-`case class Prod(...)`, `OuterMirroredType` is `Prod`.
+`type OuterType` is the type that declares the `@generated` member. For a generated def on
+`case class Prod(...)`, `OuterType` is `Prod`.
 
-`def apply(outer: OuterMirroredType): MirroredType` computes the generated value from an instance. This is the only way
+`def apply(outer: OuterType): Type` computes the generated value from an instance. This is the only way
 to obtain the value of a generated member through the mirror. You call `apply` with an instance of the declaring type,
 and it returns the computed result.
 
 The `default` method inherited from `MadeFieldElem` always returns `None` for generated members. Generated members are
 not constructor parameters and have no defaults. The value is always computed via `apply`, never via `default`.
 
-The companion object provides two type aliases: `GeneratedMadeElem.Of[T]` refines `MirroredType` to `T`, and
-`GeneratedMadeElem.OuterOf[Outer]` refines `OuterMirroredType` to `Outer`.
+The companion object provides two type aliases: `GeneratedMadeElem.Of[T]` refines `Type` to `T`, and
+`GeneratedMadeElem.OuterOf[Outer]` refines `OuterType` to `Outer`.
 
 The following example examines the API on a type with two generated members.
 
@@ -148,6 +148,7 @@ import made.annotation.*
 
 case class SensorReading(id: String, value: Double):
   @generated def summary: String = s"$id=$value"
+
   @generated def isValid: Boolean = value >= 0
 
 trait Describe[T]:
@@ -160,7 +161,7 @@ object Describe:
 
   inline private def derivedProduct[T](using mirror: Made.ProductOf[T]): Describe[T] = instance =>
     val fieldLabels = compiletime
-      .constValueTuple[mirror.MirroredElemLabels]
+      .constValueTuple[mirror.ElemLabels]
       .toList
       .asInstanceOf[List[String]]
 
@@ -185,7 +186,7 @@ assert(output.contains("true"))
 
 The derivation iterates `mirroredElems` labels via `constValueTuple[mirror.MirroredElemLabels]` for constructor field
 names, then iterates `generatedElems.toList` for generated members. Each generated element is cast to
-`GeneratedMadeElem { type OuterMirroredType = T }` so that `apply(instance)` compiles with the correct outer type. The
+`GeneratedMadeElem { type OuterType = T }` so that `apply(instance)` compiles with the correct outer type. The
 result includes both constructor fields and computed values.
 
 A fully generic version that also extracts generated member labels at compile time would use inline recursion over the

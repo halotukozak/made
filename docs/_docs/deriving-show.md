@@ -10,7 +10,7 @@ to summon a Made mirror, iterate its runtime element objects, and wire up automa
 types, singletons, and transparent wrappers.
 
 The guide assumes familiarity with Scala 3's `scala.deriving.Mirror`. Where standard Mirror derivation relies on
-compile-time `summonInline` over `MirroredElemTypes`, Made provides a different approach: runtime element objects
+compile-time `summonInline` over `ElemTypes`, Made provides a different approach: runtime element objects
 (`MadeFieldElem`, `MadeSubElem`, `MadeSubSingletonElem`) that carry labels, types, and metadata. This means your
 derivation logic iterates a concrete tuple of element objects rather than recursing over type-level tuples.
 
@@ -83,7 +83,7 @@ at compile time, then zip them with the product's field values at runtime to bui
 
 The derivation function must be `inline` because extracting labels from Made's type-level `Label` and
 `MirroredElemLabels` requires `constValue` and `constValueTuple`, which only work in inline context. The mirror
-parameter is typed as `Made.ProductOf[T]` - a type alias for `Made.Product { type MirroredType = T }`. By passing the
+parameter is typed as `Made.ProductOf[T]` - a type alias for `Made.Product { type Type = T }`. By passing the
 mirror explicitly, the compiler sees the fully refined type (including `Label` and `MirroredElemLabels`) at the
 inline expansion site.
 
@@ -91,7 +91,7 @@ The steps are:
 
 1. Use `constValue[m.Label]` to get the type name as a runtime string.
 2. Use `constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]` to materialise field labels.
-3. Use `compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]]` to resolve `Show` instances for each field at
+3. Use `compiletime.summonAll[Tuple.Map[m.ElemTypes, Show]]` to resolve `Show` instances for each field at
    compile time - no manual instance list needed.
 4. Use `value.productIterator.toList` to get field values.
 5. Zip labels with values and field `Show` instances, format each triple as `label = value`, and join them inside the
@@ -107,13 +107,13 @@ inline def deriveProduct[T <: Product](m: Made.ProductOf[T]): Show[T] = value =>
   val typeName = compiletime.constValue[m.Label]
   val labels = compiletime.constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]
   val values = value.productIterator.toList
-  val fieldShows = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
+  val fieldShows = compiletime.summonAll[Tuple.Map[m.ElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
   val fields = labels.lazyZip(values).lazyZip(fieldShows).map((label, value, s) => s"$label = ${s.show(value)}")
 
   s"$typeName(${fields.mkString(", ")})"
 ```
 
-The call to `compiletime.summonAll` maps the type-level element tuple `m.MirroredElemTypes` to `Show` instances at
+The call to `compiletime.summonAll` maps the type-level element tuple `m.ElemTypes` to `Show` instances at
 compile time. For `User`, this resolves `Show[String]` and `Show[Int]` from the primitive givens above. This eliminates
 any need to manually list field instances - the compiler handles it.
 
@@ -130,7 +130,7 @@ the wrapper.
 For `Show`, a transparent type displays as `TypeName(innerValue)` - the wrapper name followed by the shown inner value.
 
 Transparent derivation unwraps the value and delegates to the underlying type's `Show`. The function takes
-`Made.TransparentOf[T]` as the mirror parameter. `compiletime.summonInline[Show[m.MirroredElemType]]` resolves the
+`Made.TransparentOf[T]` as the mirror parameter. `compiletime.summonInline[Show[m.ElemType]]` resolves the
 `Show` instance for the single underlying type at compile time. Because the type is transparent, the wrapper name is
 omitted - `Email("alice@example.com")` shows as `alice@example.com`, not `Email(alice@example.com)`.
 
@@ -138,7 +138,7 @@ omitted - `Email("alice@example.com")` shows as `alice@example.com`, not `Email(
 import made.*
 
 inline def deriveTransparent[T](m: Made.TransparentOf[T]): Show[T] = value =>
-  val underlyingShow = compiletime.summonInline[Show[m.MirroredElemType]]
+  val underlyingShow = compiletime.summonInline[Show[m.ElemType]]
   val inner = m.unwrap(value)
   underlyingShow.show(inner)
 ```
@@ -162,8 +162,8 @@ import made.*
 import scala.reflect.ClassTag
 
 inline def deriveSum[T](m: Made.SumOf[T]): Show[T] = value =>
-  val subtypeClasses = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, ClassTag]].toList.asInstanceOf[List[ClassTag[?]]]
-  val subtypeShows = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
+  val subtypeClasses = compiletime.summonAll[Tuple.Map[m.ElemTypes, ClassTag]].toList.asInstanceOf[List[ClassTag[?]]]
+  val subtypeShows = compiletime.summonAll[Tuple.Map[m.ElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
 
   subtypeClasses
     .lazyZip(subtypeShows)

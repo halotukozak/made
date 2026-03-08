@@ -39,9 +39,9 @@ derive as `Made.Transparent` with `unwrap`/`wrap` methods that directly access t
 
 Calling `Made.derived` on a `@transparent` type returns a `Made.Transparent` mirror. The mirror provides:
 
-- `type MirroredElemType` - the single wrapped field's type
-- `def unwrap(value: MirroredType): MirroredElemType` - extracts the inner value
-- `def wrap(value: MirroredElemType): MirroredType` - constructs the wrapper from an inner value
+- `type ElemType` - the single wrapped field's type
+- `def unwrap(value: Type): ElemType` - extracts the inner value
+- `def wrap(value: ElemType): Type` - constructs the wrapper from an inner value
 - `type Label` - the type name as a string literal type
 - `type Metadata` - the annotation chain, which includes `@transparent`
 - `def mirroredElems` - a single-element tuple containing one `MadeFieldElem`

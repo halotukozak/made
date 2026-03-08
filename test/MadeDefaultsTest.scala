@@ -4,25 +4,25 @@ import made.annotation.*
 class MadeDefaultsTest extends munit.FunSuite:
   test("case class with defaults") {
     val m: Made.Product {
-      type MirroredType = WithDefaults
+      type Type = WithDefaults
       type Label = "WithDefaults"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
-        type MirroredType = Int
+      type Elems = MadeFieldElem {
+        type Type = Int
         type Label = "x"
         type Metadata = Meta
       } *: MadeFieldElem {
-        type MirroredType = String
+        type Type = String
         type Label = "y"
         type Metadata = Meta
       } *: MadeFieldElem {
-        type MirroredType = Boolean
+        type Type = Boolean
         type Label = "z"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[WithDefaults]
 
-    val (x, y, z) = m.mirroredElems
+    val (x, y, z) = m.elems
 
     assert(x.default.isEmpty)
     assert(y.default.contains("hello"))
@@ -31,21 +31,21 @@ class MadeDefaultsTest extends munit.FunSuite:
 
   test("case class with all defaults") {
     val m: Made.Product {
-      type MirroredType = AllDefaults
+      type Type = AllDefaults
       type Label = "AllDefaults"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
-        type MirroredType = Int
+      type Elems = MadeFieldElem {
+        type Type = Int
         type Label = "a"
         type Metadata = Meta
       } *: MadeFieldElem {
-        type MirroredType = String
+        type Type = String
         type Label = "b"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[AllDefaults]
 
-    val (a, b) = m.mirroredElems
+    val (a, b) = m.elems
 
     assert(a.default.contains(1))
     assert(b.default.contains("test"))
@@ -53,21 +53,21 @@ class MadeDefaultsTest extends munit.FunSuite:
 
   test("case class with mixed defaults") {
     val m: Made.Product {
-      type MirroredType = MixedDefaults
+      type Type = MixedDefaults
       type Label = "MixedDefaults"
       type Metadata = Meta
-      type MirroredElems = MadeFieldElem {
-        type MirroredType = Int
+      type Elems = MadeFieldElem {
+        type Type = Int
         type Label = "required"
         type Metadata = Meta
       } *: MadeFieldElem {
-        type MirroredType = String
+        type Type = String
         type Label = "optional"
         type Metadata = Meta
       } *: EmptyTuple
     } = Made.derived[MixedDefaults]
 
-    val (a, b) = m.mirroredElems
+    val (a, b) = m.elems
 
     assert(a.default.isEmpty)
     assert(b.default.contains("default"))
@@ -83,7 +83,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("@whenAbsent provides default") {
     val m = Made.derived[WithWhenAbsent]
 
-    val (x, y) = m.mirroredElems
+    val (x, y) = m.elems
 
     assert(x.default.isEmpty)
     assert(y.default.contains("absent"))
@@ -92,7 +92,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("@whenAbsent takes priority over Scala default value") {
     val m = Made.derived[WhenAbsentOverridesDefault]
 
-    val (a, b) = m.mirroredElems
+    val (a, b) = m.elems
 
     assert(a.default.contains(42))
     assert(b.default.contains("fromAnnotation"))
@@ -101,7 +101,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("mixing @whenAbsent, Scala defaults, and no defaults") {
     val m = Made.derived[MixedWhenAbsent]
 
-    val (a, b, c) = m.mirroredElems
+    val (a, b, c) = m.elems
 
     assert(a.default.isEmpty)
     assert(b.default.contains(99))
@@ -111,7 +111,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("recursive case class with @whenAbsent") {
     val m = Made.derived[RecWithDefault.Node]
 
-    val (value, next) = m.mirroredElems
+    val (value, next) = m.elems
 
     assert(value.default.isEmpty)
     assert(next.default.contains(None))
@@ -120,7 +120,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("recursive case class with Scala default") {
     val m = Made.derived[RecWithScalaDefault.Node]
 
-    val (value, next) = m.mirroredElems
+    val (value, next) = m.elems
 
     assert(value.default.isEmpty)
     assert(next.default.contains(None))
@@ -129,7 +129,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("@optionalParam provides default from OptionLike") {
     val m = Made.derived[WithOptionalParam]
 
-    val (x, y, z) = m.mirroredElems
+    val (x, y, z) = m.elems
 
     assertEquals(x.default, Some(None))
     assertEquals(y.default, Some(null: String | Null))
@@ -139,7 +139,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("@optionalParam priority") {
     val m = Made.derived[OptionalParamPriority]
 
-    val (a, b) = m.mirroredElems
+    val (a, b) = m.elems
 
     // @whenAbsent(Some(42)) should take priority over @optionalParam
     assertEquals(a.default, Some(Some(42)))
@@ -152,7 +152,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("generic case class with Scala default") {
     val m = Made.derived[GenericWithDefault[Int]]
 
-    val (a, label) = m.mirroredElems
+    val (a, label) = m.elems
 
     assert(a.default.isEmpty)
     assert(label.default.contains("default"))
@@ -161,7 +161,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("generic case class with type-dependent default") {
     val m = Made.derived[GenericPair[String]]
 
-    val (a, b) = m.mirroredElems
+    val (a, b) = m.elems
 
     assert(a.default.isEmpty)
     assert(b.default.contains(None))
@@ -170,7 +170,7 @@ class MadeDefaultsTest extends munit.FunSuite:
   test("generic case class with @whenAbsent takes priority") {
     val m = Made.derived[GenericWhenAbsent[Int]]
 
-    val (a, b) = m.mirroredElems
+    val (a, b) = m.elems
 
     assert(a.default.isEmpty)
     assert(b.default.contains("annotated"))
@@ -180,7 +180,7 @@ class MadeDefaultsTest extends munit.FunSuite:
     given Default[CustomOpt[String]] = () => CustomOpt("none")
 
     val m = Made.derived[WithCustomOptional]
-    val x *: EmptyTuple = m.mirroredElems
+    val x *: EmptyTuple = m.elems
     assertEquals(x.default, Some(CustomOpt("none")))
   }
 
