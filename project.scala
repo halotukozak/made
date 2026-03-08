@@ -1,6 +1,6 @@
 //> using scala 3.8.3-RC1
 
-//> using test.dep org.scalameta::munit::1.2.3
+//> using test.dep org.scalameta::munit::1.2.4
 
 //> using options -deprecation -feature -new-syntax -unchecked
 //> using options -language:noAutoTupling
