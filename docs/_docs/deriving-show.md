@@ -205,7 +205,7 @@ mirror subtype at the inline expansion site, so these pattern matches are exhaus
 The `derives` clause on a type definition triggers this: writing `case class User(...) derives Show` causes the compiler
 to look for `Show.derived`, passing the `Made.Of[User]` instance as the using parameter.
 
-```scala 3 sc-name:show-derived sc:nocompile
+```scala 3 sc-name:show-derived sc-compile-with:derive-product,derive-transparent,derive-sum,derive-singleton
 inline def derived[T](using m: Made.Of[T]): Show[T] = inline m match
   case m: Made.ProductOf[T & Product] => deriveProduct(m).asInstanceOf[Show[T]]
   case m: Made.SumOf[T] => deriveSum(m)
@@ -219,18 +219,18 @@ The product branch uses `T & Product` as the type bound because `Made.ProductOf[
 With this dispatcher in place, calling `Show.derived[User]` passes `Made.Of[User]` (which is a `Made.ProductOf[T]` at
 runtime) and the `inline match` routes to `deriveProduct`.
 
-```scala 3 sc:nocompile
-given Show[Circle] = Show.derived[Circle]
-given Show[Rectangle] = Show.derived[Rectangle]
-given Show[Point.type] = Show.derived[Point.type]
+```scala 3 sc-compile-with:show-derived,user,email,shape
+given Show[Circle] = derived[Circle]
+given Show[Rectangle] = derived[Rectangle]
+given Show[Point.type] = derived[Point.type]
 
-val userShow = Show.derived[User]
+val userShow = derived[User]
 assert(userShow.show(User("Alice", 30)) == "User(name = Alice, age = 30)")
 
-val emailShow = Show.derived[Email]
+val emailShow = derived[Email]
 assert(emailShow.show(Email("alice@example.com")) == "alice@example.com")
 
-val shapeShow: Show[Shape] = Show.derived[Shape]
+val shapeShow: Show[Shape] = derived[Shape]
 assert(shapeShow.show(Point) == "Point")
 assert(shapeShow.show(Circle(3.14)) == "Circle(radius = 3.14)")
 assert(shapeShow.show(Rectangle(2.0, 5.0)) == "Rectangle(width = 2.0, height = 5.0)")
@@ -239,15 +239,15 @@ assert(shapeShow.show(Rectangle(2.0, 5.0)) == "Rectangle(width = 2.0, height = 5
 Note that sum derivation requires `Show` instances for each subtype to be in scope before deriving the sum itself.
 The `given` declarations for `Circle`, `Rectangle`, and `Point.type` provide these.
 
-```scala 3 sc:nocompile
-given Show[Circle] = Show.derived[Circle]
-given Show[Rectangle] = Show.derived[Rectangle]
-given Show[Point.type] = Show.derived[Point.type]
+```scala 3 sc-compile-with:show-derived,user,email,shape,origin
+given Show[Circle] = derived[Circle]
+given Show[Rectangle] = derived[Rectangle]
+given Show[Point.type] = derived[Point.type]
 
-val userShow = Show.derived[User]
-val emailShow = Show.derived[Email]
-val shapeShow: Show[Shape] = Show.derived[Shape]
-val originShow = Show.derived[Origin.type]
+val userShow = derived[User]
+val emailShow = derived[Email]
+val shapeShow: Show[Shape] = derived[Shape]
+val originShow = derived[Origin.type]
 
 println(userShow.show(User("Alice", 30)))
 println(emailShow.show(Email("alice@example.com")))
