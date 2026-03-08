@@ -82,15 +82,15 @@ Product derivation is the core Made pattern. Given a mirror for a product type `
 at compile time, then zip them with the product's field values at runtime to build the string representation.
 
 The derivation function must be `inline` because extracting labels from Made's type-level `Label` and
-`MirroredElemLabels` requires `constValue` and `constValueTuple`, which only work in inline context. The mirror
+`ElemLabels` requires `constValue` and `constValueTuple`, which only work in inline context. The mirror
 parameter is typed as `Made.ProductOf[T]` - a type alias for `Made.Product { type Type = T }`. By passing the
-mirror explicitly, the compiler sees the fully refined type (including `Label` and `MirroredElemLabels`) at the
+mirror explicitly, the compiler sees the fully refined type (including `Label` and `ElemLabels`) at the
 inline expansion site.
 
 The steps are:
 
 1. Use `constValue[m.Label]` to get the type name as a runtime string.
-2. Use `constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]` to materialise field labels.
+2. Use `constValueTuple[m.ElemLabels].toList.asInstanceOf[List[String]]` to materialise field labels.
 3. Use `compiletime.summonAll[Tuple.Map[m.ElemTypes, Show]]` to resolve `Show` instances for each field at
    compile time - no manual instance list needed.
 4. Use `value.productIterator.toList` to get field values.
@@ -105,7 +105,7 @@ import made.*
 
 inline def deriveProduct[T <: Product](m: Made.ProductOf[T]): Show[T] = value =>
   val typeName = compiletime.constValue[m.Label]
-  val labels = compiletime.constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]
+  val labels = compiletime.constValueTuple[m.ElemLabels].toList.asInstanceOf[List[String]]
   val values = value.productIterator.toList
   val fieldShows = compiletime.summonAll[Tuple.Map[m.ElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
   val fields = labels.lazyZip(values).lazyZip(fieldShows).map((label, value, s) => s"$label = ${s.show(value)}")
@@ -117,7 +117,7 @@ The call to `compiletime.summonAll` maps the type-level element tuple `m.ElemTyp
 compile time. For `User`, this resolves `Show[String]` and `Show[Int]` from the primitive givens above. This eliminates
 any need to manually list field instances - the compiler handles it.
 
-The key Made-specific insight here is that `mirroredElems` gives you runtime `MadeFieldElem` objects. While this example
+The key Made-specific insight here is that `elems` gives you runtime `MadeFieldElem` objects. While this example
 uses `constValueTuple` for labels (same as standard Mirror), the runtime element objects become essential when you need
 metadata, defaults, or annotations - capabilities that standard Mirror lacks entirely.
 
@@ -143,7 +143,7 @@ inline def deriveTransparent[T](m: Made.TransparentOf[T]): Show[T] = value =>
   underlyingShow.show(inner)
 ```
 
-Transparent mirrors also carry a single-element `mirroredElems` tuple containing one `MadeFieldElem`, so you could
+Transparent mirrors also carry a single-element `elems` tuple containing one `MadeFieldElem`, so you could
 iterate it the same way as a product. However, `unwrap`/`wrap` is the idiomatic approach - it makes the single-field
 semantics explicit and avoids the overhead of tuple iteration for what is always exactly one element.
 
@@ -179,7 +179,7 @@ value. The `compiletime.summonAll` calls resolve instances for all subtypes at c
 
 ## Singleton Mirrors
 
-`Made.Singleton` is produced for standalone objects and `Unit`. Its `mirroredElems` is `EmptyTuple` - there are no
+`Made.Singleton` is produced for standalone objects and `Unit`. Its `elems` is `EmptyTuple` - there are no
 fields or subtypes to iterate. The singleton instance is available via `value`.
 
 For `Show`, a singleton simply outputs its type label. Sum derivation already handles singletons via `ClassTag`
