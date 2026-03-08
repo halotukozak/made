@@ -216,21 +216,21 @@ inline def derived[T](using m: Made.Of[T]): Show[T] = inline m match
 The product branch uses `T & Product` as the type bound because `Made.ProductOf[T]` requires its `T` to extend
 `Product`. The `.asInstanceOf[Show[T]]` cast bridges the `Show[T & Product]` return type back to `Show[T]`.
 
-With this dispatcher in place, calling `derived[User]` passes `Made.Of[User]` (which is a `Made.ProductOf[T]` at
+With this dispatcher in place, calling `Show.derived[User]` passes `Made.Of[User]` (which is a `Made.ProductOf[T]` at
 runtime) and the `inline match` routes to `deriveProduct`.
 
 ```scala sc:nocompile
-given Show[Circle] = derived[Circle]
-given Show[Rectangle] = derived[Rectangle]
-given Show[Point.type] = derived[Point.type]
+given Show[Circle] = Show.derived[Circle]
+given Show[Rectangle] = Show.derived[Rectangle]
+given Show[Point.type] = Show.derived[Point.type]
 
-val userShow = derived[User]
+val userShow = Show.derived[User]
 assert(userShow.show(User("Alice", 30)) == "User(name = Alice, age = 30)")
 
-val emailShow = derived[Email]
+val emailShow = Show.derived[Email]
 assert(emailShow.show(Email("alice@example.com")) == "alice@example.com")
 
-val shapeShow: Show[Shape] = derived[Shape]
+val shapeShow: Show[Shape] = Show.derived[Shape]
 assert(shapeShow.show(Point) == "Point")
 assert(shapeShow.show(Circle(3.14)) == "Circle(radius = 3.14)")
 assert(shapeShow.show(Rectangle(2.0, 5.0)) == "Rectangle(width = 2.0, height = 5.0)")
@@ -240,14 +240,14 @@ Note that sum derivation requires `Show` instances for each subtype to be in sco
 The `given` declarations for `Circle`, `Rectangle`, and `Point.type` provide these.
 
 ```scala sc:nocompile
-given Show[Circle] = derived[Circle]
-given Show[Rectangle] = derived[Rectangle]
-given Show[Point.type] = derived[Point.type]
+given Show[Circle] = Show.derived[Circle]
+given Show[Rectangle] = Show.derived[Rectangle]
+given Show[Point.type] = Show.derived[Point.type]
 
-val userShow = derived[User]
-val emailShow = derived[Email]
-val shapeShow: Show[Shape] = derived[Shape]
-val originShow = derived[Origin.type]
+val userShow = Show.derived[User]
+val emailShow = Show.derived[Email]
+val shapeShow: Show[Shape] = Show.derived[Shape]
+val originShow = Show.derived[Origin.type]
 
 println(userShow.show(User("Alice", 30)))
 println(emailShow.show(Email("alice@example.com")))
