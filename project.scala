@@ -21,5 +21,3 @@
 //> using publish.vcs github:halotukozak/made
 //> using publish.repository central
 //> using publish.developer "halotukozak|Bartłomiej Kozak|https://github.com/halotukozak"
-
-//> using options -coverage-out:./.scoverage
