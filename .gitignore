@@ -47,6 +47,7 @@ build/
 .scoverage/*
 !.scoverage/report.sc
 scala-doc
+.metals/
 
 ### AI ###
 .claude/

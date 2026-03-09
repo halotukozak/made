@@ -4,6 +4,8 @@ import made.annotation.*
 
 class LabelTest extends munit.FunSuite:
 
+  // --- Type-level label ---
+
   test("label for case class") {
     val mirror = Made.derived[SimpleCaseClass]
     assertEquals(mirror.label, "SimpleCaseClass")
@@ -45,6 +47,8 @@ class LabelTest extends munit.FunSuite:
     assertEquals(mirror.label, "Box")
   }
 
+  // --- Element labels ---
+
   test("elem label for product fields") {
     val mirror = Made.derived[SimpleCaseClass]
     val id *: name *: EmptyTuple = mirror.elems
@@ -84,5 +88,97 @@ class LabelTest extends munit.FunSuite:
     assertEquals(field.label, "customName")
   }
 
+  // --- elemLabels extension ---
+
+  test("elemLabels for product") {
+    val mirror = Made.derived[LabelProduct]
+    val labels: ("x", "y", "z") = mirror.elemLabels
+    assertEquals(labels, ("x", "y", "z"))
+  }
+
+  test("elemLabels for product with @name overrides") {
+    val mirror = Made.derived[LabelNamedFields]
+    val labels: ("renamed_a", "b") = mirror.elemLabels
+    assertEquals(labels, ("renamed_a", "b"))
+  }
+
+  test("elemLabels for enum") {
+    val mirror = Made.derived[LabelEnum]
+    val labels: ("A", "B", "C") = mirror.elemLabels
+    assertEquals(labels, ("A", "B", "C"))
+  }
+
+  test("elemLabels for enum with @name overrides") {
+    val mirror = Made.derived[LabelNamedEnum]
+    val labels: ("alpha", "B", "gamma") = mirror.elemLabels
+    assertEquals(labels, ("alpha", "B", "gamma"))
+  }
+
+  test("elemLabels for transparent class") {
+    val mirror = Made.derived[TransparentClass]
+    val labels: "int" *: EmptyTuple = mirror.elemLabels
+    assertEquals(labels, "int" *: EmptyTuple)
+  }
+
+  test("elemLabels for singleton is empty") {
+    val mirror = Made.derived[SimpleObject.type]
+    val labels: EmptyTuple = mirror.elemLabels
+    assertEquals(labels, EmptyTuple)
+  }
+
+  test("elemLabels for value class") {
+    val mirror = Made.derived[ValueClass]
+    val labels: "str" *: EmptyTuple = mirror.elemLabels
+    assertEquals(labels, "str" *: EmptyTuple)
+  }
+
+  test("elemLabels for generic product") {
+    val mirror = Made.derived[LabelGeneric[Int]]
+    val labels: ("value", "label") = mirror.elemLabels
+    assertEquals(labels, ("value", "label"))
+  }
+
+  test("elemLabels with inherited @name") {
+    val mirror = Made.derived[InheritedName]
+    val labels: "customName" *: EmptyTuple = mirror.elemLabels
+    assertEquals(labels, "customName" *: EmptyTuple)
+  }
+
+  test("elemLabels for mixed ADT") {
+    val mirror = Made.derived[LabelMixed]
+    val labels: ("Leaf", "Branch") = mirror.elemLabels
+    assertEquals(labels, ("Leaf", "Branch"))
+  }
+
+  // --- elem label matches elemLabels ---
+
+  test("elem labels match elemLabels tuple") {
+    val mirror = Made.derived[LabelProduct]
+    val x *: y *: z *: EmptyTuple = mirror.elems
+    val labels = mirror.elemLabels
+    assertEquals(labels._1, x.label)
+    assertEquals(labels._2, y.label)
+    assertEquals(labels._3, z.label)
+  }
+
+// --- Fixtures ---
+
 @name("custom")
 case class NamedProduct(x: Int)
+
+case class LabelProduct(x: Int, y: String, z: Boolean)
+case class LabelNamedFields(@name("renamed_a") a: Int, b: String)
+case class LabelGeneric[T](value: T, label: String)
+
+enum LabelEnum:
+  case A, B, C
+
+enum LabelNamedEnum:
+  @name("alpha") case A
+  case B
+  @name("gamma") case C
+
+sealed trait LabelMixed
+object LabelMixed:
+  case object Leaf extends LabelMixed
+  case class Branch(left: LabelMixed, right: LabelMixed) extends LabelMixed
