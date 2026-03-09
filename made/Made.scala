@@ -2,7 +2,7 @@ package made
 
 import made.annotation.*
 
-import scala.annotation.{implicitNotFound, Annotation}
+import scala.annotation.{Annotation, implicitNotFound}
 import scala.deriving.Mirror
 import scala.quoted.*
 
@@ -123,7 +123,9 @@ sealed trait MadeElem:
  * @see [[GeneratedMadeElem]]
  * @see [[Made.Product]]
  */
-sealed trait MadeFieldElem extends MadeElem:
+sealed trait MadeFieldElem extends MadeElem
+
+sealed trait MadeFieldElemWithDefault extends MadeFieldElem:
   /**
    * Resolves a default value for this field using the following priority chain (first match wins):
    *
@@ -132,9 +134,9 @@ sealed trait MadeFieldElem extends MadeElem:
    *  3. Constructor default - the Scala-level default parameter value
    *  4. `None` - no default available
    *
-   * @return the default value if available, `None` otherwise
+   * @return the default value
    */
-  def default: Option[Type]
+  def default: Type
 
 object MadeFieldElem:
   type Of[T] = MadeFieldElem { type Type = T }
@@ -192,9 +194,6 @@ sealed trait GeneratedMadeElem extends MadeFieldElem:
 
   /** Computes the generated value from an instance of the declaring type. */
   def apply(outer: OuterType): Type
-
-  /** Always `None`; generated members have no constructor defaults. */
-  final def default: Option[Type] = None
 
 object GeneratedMadeElem:
   type Of[T] = GeneratedMadeElem { type Type = T }
@@ -331,16 +330,25 @@ object Made:
     def madeFieldOf(field: Symbol): Expr[MadeFieldElem] =
       (field.termRef.widen.asType, labelTypeOf(field, field.name), metaTypeOf(field)).runtimeChecked match
         case ('[fieldType], '[type elemLabel <: String; elemLabel], '[type fieldMeta <: Meta; fieldMeta]) =>
-          '{
-            new MadeFieldElem:
-              type Type = fieldType
-              type Label = elemLabel
-              type Metadata = fieldMeta
+          defaultOf[fieldType](0, field) match
+            case Some(defaultExpr) =>
+              '{
+                new MadeFieldElemWithDefault:
+                  type Type = fieldType
+                  type Label = elemLabel
+                  type Metadata = fieldMeta
 
-              def default = ${ defaultOf[fieldType](0, field) }
-          }
+                  def default: Type = $defaultExpr
+              }
+            case None =>
+              '{
+                new MadeFieldElem:
+                  type Type = fieldType
+                  type Label = elemLabel
+                  type Metadata = fieldMeta
+              }
 
-    def defaultOf[E: Type](index: Int, symbol: Symbol): Expr[Option[E]] = Expr.ofOption {
+    def defaultOf[E: Type](index: Int, symbol: Symbol): Option[Expr[E]] =
       def fromWhenAbsent = symbol
         .getAnnotationOf[whenAbsent[?]]
         .map:
@@ -365,7 +373,6 @@ object Made:
           applied.asExprOf[E]
 
       fromWhenAbsent orElse fromOptionalParam orElse fromDefaultValue
-    }
 
     def newTFrom(args: List[Expr[?]]): Expr[T] =
       New(TypeTree.of[T])
@@ -504,14 +511,24 @@ object Made:
                 case ((exprs, names), ((fieldSymbol, index), '[fieldTpe])) =>
                   (labelTypeOf(fieldSymbol, fieldSymbol.name), metaTypeOf(fieldSymbol)).runtimeChecked match
                     case ('[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
-                      val expr = '{
-                        new MadeFieldElem:
-                          type Type = fieldTpe
-                          type Label = elemLabel
-                          type Metadata = meta
+                      val expr = defaultOf[fieldTpe](index, fieldSymbol) match
+                        case Some(defaultExpr) =>
+                          '{
+                            new MadeFieldElemWithDefault:
+                              type Type = fieldTpe
+                              type Label = elemLabel
+                              type Metadata = meta
 
-                          def default = ${ defaultOf[fieldTpe](index, fieldSymbol) }
-                      }
+                              def default = $defaultExpr
+                          }
+                        case None =>
+                          '{
+                            new MadeFieldElem:
+                              type Type = fieldTpe
+                              type Label = elemLabel
+                              type Metadata = meta
+                          }
+
                       (exprs :+ expr, names :+ (typeToString[elemLabel], fieldSymbol.name))
                 case _ => wontHappen
 

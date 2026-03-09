@@ -60,19 +60,16 @@ class RuntimeAccessTest extends munit.FunSuite:
     assertEquals(genElems.size, 2)
   }
 
-  // --- Runtime .default works on erased MadeFieldElem ---
+  // --- Runtime default access ---
 
-  test("Seq[MadeFieldElem].map(_.default) works at runtime") {
+  test("Seq[MadeFieldElem] runtime default access via MadeFieldElemWithDefault") {
     val m = Made.derived[RAWithDefaults]
     val elems = m.elems.toList.asInstanceOf[List[MadeFieldElem]]
-    val defaults = elems.map(_.default)
+    val defaults = elems.map {
+      case e: MadeFieldElemWithDefault => Some(e.default)
+      case _ => None
+    }
     assertEquals(defaults, List(None, Some("hello"), Some(true)))
-  }
-
-  test("Seq[GeneratedMadeElem].map(_.default) all None") {
-    val m = Made.derived[RAWithGenerated]
-    val genElems = m.generatedElems.toList.asInstanceOf[List[GeneratedMadeElem]]
-    assertEquals(genElems.map(_.default), List(None, None))
   }
 
   // --- Runtime .value works on erased MadeSubSingletonElem ---
@@ -123,7 +120,10 @@ class RuntimeAccessTest extends munit.FunSuite:
     val m = Made.derived[RAWithDefaults]
     val labels = m.elemLabels.toList.asInstanceOf[List[String]]
     val elems = m.elems.toList.asInstanceOf[List[MadeFieldElem]]
-    val zipped = labels.zip(elems.map(_.default))
+    val zipped = labels.zip(elems.map {
+      case e: MadeFieldElemWithDefault => Some(e.default)
+      case _ => None
+    })
     assertEquals(zipped, List(("x", None), ("y", Some("hello")), ("z", Some(true))))
   }
 
@@ -169,8 +169,8 @@ class RuntimeAccessTest extends munit.FunSuite:
 
   test("round-trip: collect defaults and build instance") {
     val m = Made.derived[RAAllDefaults]
-    val elems = m.elems.toList.asInstanceOf[List[MadeFieldElem]]
-    val defaults = elems.map(_.default.get)
+    val elems = m.elems.toList.asInstanceOf[List[MadeFieldElemWithDefault]]
+    val defaults = elems.map(_.default)
     val instance = m.fromUnsafeArray(defaults.toArray)
     assertEquals(instance, RAAllDefaults())
   }
