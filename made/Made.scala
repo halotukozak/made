@@ -14,22 +14,73 @@ import scala.quoted.*
  * Unlike the standard library `Mirror`, `Made` carries per-element metadata (annotations,
  * default values, labels) and supports `@generated` members that compute derived values.
  *
- * @example
+ * == Basic usage ==
  * {{{
  * import made.*
  *
  * case class User(name: String, age: Int)
  *
- * val mirror: Made.Of[User] = Made.derived[User]
- * // mirror type members:
- * //   type Type = User
- * //   type Label = "User"
- * //   type Metadata = Meta
- * //   type Elems = MadeFieldElem { ... } *: MadeFieldElem { ... } *: EmptyTuple
- *
- * val (nameFld, ageFld) = mirror.mirroredElems
+ * val mirror = Made.derived[User]
+ * val (nameFld, ageFld) = mirror.elems
  * val user = mirror.fromUnsafeArray(Array("Alice", 30))
  * }}}
+ *
+ * == Compile-time label access ==
+ *
+ * Labels are resolved at compile time and preserve singleton string types.
+ *
+ * '''Mirror label:'''
+ * {{{
+ * val mirror = Made.derived[User]
+ * val name: "User" = mirror.label  // compile-time singleton type
+ * }}}
+ *
+ * '''All element labels as a typed tuple:'''
+ * {{{
+ * val labels: ("name", "age") = mirror.elemLabels
+ * }}}
+ *
+ * '''Per-element label via tuple destructuring:'''
+ * {{{
+ * val nameField *: ageField *: EmptyTuple = mirror.elems
+ * val n: "name" = nameField.label
+ * val a: "age"  = ageField.label
+ * }}}
+ *
+ * '''Inline recursive collection (advanced):'''
+ * {{{
+ * inline def collectLabels[Tup <: Tuple]: Tuple.Map[Tup, Made.ExtractLabel] =
+ *   inline compiletime.erasedValue[Tup] match
+ *     case _: EmptyTuple => EmptyTuple
+ *     case _: (m *: t)   => compiletime.constValue[Made.ExtractLabel[m]] *: collectLabels[t]
+ *
+ * val labels = collectLabels[mirror.Elems]  // ("name", "age")
+ * }}}
+ *
+ * == Compile-time annotation queries ==
+ * {{{
+ * val nameField *: _ *: EmptyTuple = mirror.elems
+ * nameField.hasAnnotation[MyAnnotation]           // Boolean, resolved at compile time
+ * nameField.getAnnotation[MyAnnotation]           // Option[MyAnnotation]
+ * }}}
+ *
+ * == Compile-time singleton value access ==
+ *
+ * For enum types with singleton cases, access values via tuple destructuring:
+ * {{{
+ * enum Color:
+ *   case Red, Green, Blue
+ *
+ * val mirror = Made.derived[Color]
+ * val r *: g *: b *: EmptyTuple = mirror.elems
+ * r.value  // Color.Red
+ * g.value  // Color.Green
+ * b.value  // Color.Blue
+ * }}}
+ *
+ * @note Most label and annotation operations require concrete element types known
+ *       at compile time. Erasing elements (e.g. via `toList`) loses type information.
+ *       Use `elemLabels.toList` for runtime-compatible label access.
  *
  * @see [[Made.Product]]
  * @see [[Made.Sum]]
