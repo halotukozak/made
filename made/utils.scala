@@ -8,9 +8,9 @@ extension (comp: Expr.type)
     case None => '{ None }
 
 // like ValueOf but without the implicit search and boxing
-inline private[made] def singleValueOf[T <: scala.Singleton]: T = ${ singleValueOfImpl[T] }
+inline private[made] def singleValueOf[T]: T = ${ singleValueOfImpl[T] }
 
-private def singleValueOfImpl[T <: scala.Singleton: Type](using quotes: Quotes): Expr[T] =
+private def singleValueOfImpl[T:Type](using quotes: Quotes): Expr[T] =
   import quotes.reflect.*
   val term = TypeRepr.of[T] match
     case ConstantType(c: Constant) => Literal(c)

@@ -62,11 +62,11 @@ sealed trait Made:
 
   /** Tuple of [[MadeElem]] subtypes representing constructor fields (for products) or subtypes (for sums). */
   type Elems <: Tuple
+  val elems: Elems
 
   /** Tuple of [[GeneratedMadeElem]] for members annotated with `@generated`. */
   type GeneratedElems <: Tuple
-  def elems: Elems
-  def generatedElems: GeneratedElems
+  val generatedElems: GeneratedElems
 
 /**
  * Base type for elements within a [[Made]] mirror's [[Elems]] tuple.
@@ -140,6 +140,17 @@ sealed trait MadeFieldElemWithDefault extends MadeFieldElem:
 
 object MadeFieldElem:
   type Of[T] = MadeFieldElem { type Type = T }
+  type LabelOf[l <: String] = MadeElem { type Label = l }
+  type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
+
+  type ExtractType[M /* <: MadeFieldElem */ ] = M match
+    case Of[t] => t
+
+  type ExtractLabel[M /* <: MadeFieldElem */ ] <: String = M match
+    case LabelOf[label] => label
+
+  type ExtractMeta[M /* <: MadeFieldElem */ ] <: Meta = M match
+    case MetaOf[meta] => meta
 
 /**
  * Element representing a non-singleton subtype in a sum type mirror.
@@ -170,9 +181,7 @@ object MadeSubElem:
  * @see [[Made.Sum]]
  * @see [[Made.Singleton]]
  */
-sealed trait MadeSubSingletonElem extends MadeSubElem:
-  /** Returns the singleton instance. */
-  def value: Type
+sealed trait MadeSubSingletonElem extends MadeSubElem
 
 object MadeSubSingletonElem:
   type Of[T] = MadeSubSingletonElem { type Type = T }
@@ -229,7 +238,7 @@ object Made:
   type LabelOf[l <: String] = MadeElem { type Label = l }
   type MetaOf[m <: Meta] = MadeElem { type Metadata = m }
 
-  type ExtractOf[M /* <: MadeElem */ ] = M match
+  type ExtractType[M /* <: MadeElem */ ] = M match
     case Of[t] => t
 
   type ExtractLabel[M /* <: MadeElem */ ] <: String = M match
@@ -312,9 +321,9 @@ object Made:
         case ('[elemTpe], '[type elemLabel <: String; elemLabel], '[type meta <: Meta; meta]) =>
           '{
             new GeneratedMadeElemWorkaround[T, elemTpe]:
-              type Label = elemLabel
-              type Metadata = meta
-              def apply(outer: T): elemTpe = ${ '{ outer }.asTerm.select(member).asExprOf[elemTpe] }
+              override type Label = elemLabel
+              override type Metadata = meta
+              override def apply(outer: T): elemTpe = ${ '{ outer }.asTerm.select(member).asExprOf[elemTpe] }
             : GeneratedMadeElem {
               type Type = elemTpe
               type Label = elemLabel
@@ -334,18 +343,18 @@ object Made:
             case Some(defaultExpr) =>
               '{
                 new MadeFieldElemWithDefault:
-                  type Type = fieldType
-                  type Label = elemLabel
-                  type Metadata = fieldMeta
+                  override type Type = fieldType
+                  override type Label = elemLabel
+                  override type Metadata = fieldMeta
 
-                  def default: Type = $defaultExpr
+                  override def default: Type = $defaultExpr
               }
             case None =>
               '{
                 new MadeFieldElem:
-                  type Type = fieldType
-                  type Label = elemLabel
-                  type Metadata = fieldMeta
+                  override type Type = fieldType
+                  override type Label = elemLabel
+                  override type Metadata = fieldMeta
               }
 
     def defaultOf[E: Type](index: Int, symbol: Symbol): Option[Expr[E]] =
@@ -395,13 +404,12 @@ object Made:
             case '[type s <: scala.Singleton; s] =>
               '{
                 new Made.Singleton:
-                  type Type = s
-                  type Label = label
-                  type Metadata = meta
-                  type GeneratedElems = generatedElems
+                  override type Type = s
+                  override type Label = label
+                  override type Metadata = meta
+                  override type GeneratedElems = generatedElems
 
-                  def generatedElems: GeneratedElems = $generatedElemsExpr
-                  def value: s = singleValueOf[s]
+                  override val generatedElems: GeneratedElems = $generatedElemsExpr
                 .asInstanceOf[
                   Made.SingletonOf[T] {
                     type Label = label
@@ -413,13 +421,12 @@ object Made:
             case '[Unit] =>
               '{
                 new Made.Singleton:
-                  type Type = Unit
-                  type Label = label
-                  type Metadata = meta
-                  type GeneratedElems = generatedElems
+                  override type Type = Unit
+                  override type Label = label
+                  override type Metadata = meta
+                  override type GeneratedElems = generatedElems
 
-                  def generatedElems: GeneratedElems = $generatedElemsExpr
-                  def value: Unit = ()
+                  override val generatedElems: GeneratedElems = $generatedElemsExpr
                 .asInstanceOf[
                   Made.SingletonOf[T] {
                     type Label = label
@@ -447,14 +454,14 @@ object Made:
                 val tw = TransparentWrapping.derived[fieldType, T]
 
                 new TransparentWorkaround[T, fieldType]:
-                  type Label = label
-                  type Metadata = meta
+                  override type Label = label
+                  override type Metadata = meta
 
-                  type Elems = madeFieldElem *: EmptyTuple
-                  def elems: Elems = $madeFieldExpr *: EmptyTuple
+                  override type Elems = madeFieldElem *: EmptyTuple
+                  override val elems: Elems = $madeFieldExpr *: EmptyTuple
 
-                  def unwrap(value: Type): ElemType = tw.unwrap(value)
-                  def wrap(value: ElemType): Type = tw.wrap(value)
+                  override def unwrap(value: Type): ElemType = tw.unwrap(value)
+                  override def wrap(value: ElemType): Type = tw.wrap(value)
                 : Made.TransparentOf[T] {
                   type Label = label
                   type ElemType = fieldType
@@ -473,17 +480,17 @@ object Made:
                 } =>
               '{
                 new Made.Product:
-                  type Label = label
-                  type Type = T
-                  type Metadata = meta
+                  override type Label = label
+                  override type Type = T
+                  override type Metadata = meta
 
-                  type Elems = madeFieldElem *: EmptyTuple
-                  def elems: Elems = $madeFieldExpr *: EmptyTuple
+                  override type Elems = madeFieldElem *: EmptyTuple
+                  override val elems: Elems = $madeFieldExpr *: EmptyTuple
 
-                  type GeneratedElems = generatedElems
-                  def generatedElems: GeneratedElems = $generatedElemsExpr
+                  override type GeneratedElems = generatedElems
+                  override val generatedElems: GeneratedElems = $generatedElemsExpr
 
-                  def fromUnsafeArray(product: Array[Any]): T =
+                  override def fromUnsafeArray(product: Array[Any]): T =
                     ${ newTFrom(List('{ product(0).asInstanceOf[fieldType] })) }
                 : Made.ProductOf[T] {
                   type Label = label
@@ -515,11 +522,11 @@ object Made:
                         case Some(defaultExpr) =>
                           '{
                             new MadeFieldElemWithDefault:
-                              type Type = fieldTpe
-                              type Label = elemLabel
-                              type Metadata = meta
+                              override type Type = fieldTpe
+                              override type Label = elemLabel
+                              override type Metadata = meta
 
-                              def default = $defaultExpr
+                              override def default: Type = $defaultExpr
                           }
                         case None =>
                           '{
@@ -538,16 +545,16 @@ object Made:
               case '{ type mirroredElems <: Tuple; $mirroredElemsExpr: mirroredElems } =>
                 '{
                   new Made.Product:
-                    type Type = T
-                    type Label = label
-                    type Metadata = meta
-                    type Elems = mirroredElems
+                    override type Type = T
+                    override type Label = label
+                    override type Metadata = meta
+                    override type Elems = mirroredElems
 
-                    def elems: Elems = $mirroredElemsExpr
-                    def fromUnsafeArray(product: Array[Any]): T = $m.fromProduct(Tuple.fromArray(product))
+                    override val elems: Elems = $mirroredElemsExpr
+                    override def fromUnsafeArray(product: Array[Any]): T = $m.fromProduct(Tuple.fromArray(product))
 
-                    type GeneratedElems = generatedElems
-                    def generatedElems: GeneratedElems = $generatedElemsExpr
+                    override type GeneratedElems = generatedElems
+                    override val generatedElems: GeneratedElems = $generatedElemsExpr
                   : Made.ProductOf[T] {
                     type Label = label
                     type Metadata = meta
@@ -583,15 +590,13 @@ object Made:
                               type Type = s
                               type Label = elemLabel
                               type Metadata = meta
-
-                              def value: s = singleValueOf[s]
                           }
                         case '[s] =>
                           '{
                             new MadeSubElem:
-                              type Type = subType
-                              type Label = elemLabel
-                              type Metadata = meta
+                              override type Type = subType
+                              override type Label = elemLabel
+                              override type Metadata = meta
                           }
                       (exprs :+ expr, names :+ (typeToString[elemLabel], subSymbol.name))
                 case _ => wontHappen
@@ -602,14 +607,14 @@ object Made:
               case '{ type mirroredElems <: Tuple; $mirroredElemsExpr: mirroredElems } =>
                 '{
                   new Made.Sum:
-                    type Type = T
-                    type Label = label
-                    type Metadata = meta
-                    type Elems = mirroredElems
-                    def elems: Elems = $mirroredElemsExpr
+                    override type Type = T
+                    override type Label = label
+                    override type Metadata = meta
+                    override type Elems = mirroredElems
+                    override val elems: Elems = $mirroredElemsExpr
 
-                    type GeneratedElems = generatedElems
-                    def generatedElems: GeneratedElems = $generatedElemsExpr
+                    override type GeneratedElems = generatedElems
+                    override val generatedElems: GeneratedElems = $generatedElemsExpr
                   : Made.SumOf[T] {
                     type Label = label
                     type Metadata = meta
@@ -677,11 +682,9 @@ object Made:
    * @see [[Made.Product]]
    */
   sealed trait Singleton extends Made:
-    final type Elems = EmptyTuple
+    override final type Elems = EmptyTuple
 
-    /** Returns the singleton instance. */
-    def value: Type
-    final def elems: Elems = EmptyTuple
+    override final val elems: Elems = EmptyTuple
 
   /**
    * Mirror for transparent wrapper types (single-field case classes
@@ -710,7 +713,7 @@ object Made:
     /** Wraps a value into the transparent type. */
     def wrap(value: ElemType): Type
 
-    final def generatedElems: GeneratedElems = EmptyTuple
+    final val generatedElems: GeneratedElems = EmptyTuple
 
   // workaround for https://github.com/scala/scala3/issues/25245
   private sealed trait TransparentWorkaround[T, U] extends Made.Transparent:

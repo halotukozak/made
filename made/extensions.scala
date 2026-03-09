@@ -1,3 +1,4 @@
+//noinspection UnitMethodIsParameterless
 package made
 
 import made.annotation.MetaAnnotation
@@ -50,3 +51,8 @@ extension [Ls <: Tuple](l: { type ElemLabels = Ls })
 @publicInBinary private def hasAnnotationImpl[A <: MetaAnnotation: Type, M <: Meta: Type](using quotes: Quotes)
   : Expr[Boolean] =
   Expr(getAnnotationImpl[A, M].isExprOf[Some[A]])
+
+extension [T](self: Made.SingletonOf[T]) inline def value: T = singleValueOf[T]
+extension (self: Made.SingletonOf[Unit]) inline def value: Unit = ()
+extension [T](self: MadeSubSingletonElem.Of[T]) inline def value: T = singleValueOf[T]
+extension (self: MadeSubSingletonElem.Of[Unit]) inline def value: Unit = ()
