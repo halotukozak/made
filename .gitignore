@@ -46,7 +46,8 @@ build/
 .scala-doc/
 .scoverage/*
 !.scoverage/report.sc
+scala-doc
 
 ### AI ###
 .claude/
-.planning/.planning/
+.planning/
