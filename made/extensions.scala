@@ -88,7 +88,7 @@ extension [Ls <: Tuple](l: { type ElemLabels = Ls })
   : Expr[Boolean] =
   Expr(getAnnotationImpl[A, M].isExprOf[Some[A]])
 
-extension [T](self: Made.SingletonOf[T]) inline def value: T = singleValueOf[T]
+extension [T <: Singleton](self: Made.SingletonOf[T]) inline def value: T = singleValueOf[T]
 extension (self: Made.SingletonOf[Unit]) inline def value: Unit = ()
-extension [T](self: MadeSubSingletonElem.Of[T]) inline def value: T = singleValueOf[T]
+extension [T <: Singleton](self: MadeSubSingletonElem.Of[T]) inline def value: T = singleValueOf[T]
 extension (self: MadeSubSingletonElem.Of[Unit]) inline def value: Unit = ()

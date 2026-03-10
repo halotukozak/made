@@ -167,7 +167,8 @@ sealed trait MadeElem:
  * Element representing a constructor parameter in a product type mirror.
  *
  * Each entry in [[Made.Product]]'s [[Elems]] tuple is a `MadeFieldElem`,
- * providing the field's type, label, metadata, and default value.
+ * providing the field's type, label, and metadata. Fields that have a default
+ * value are represented by the [[MadeFieldElemWithDefault]] subtype.
  *
  * @see [[MadeElem]]
  * @see [[MadeSubElem]]
@@ -176,17 +177,18 @@ sealed trait MadeElem:
  */
 sealed trait MadeFieldElem extends MadeElem
 
+/**
+ * A [[MadeFieldElem]] for fields that have a default value available.
+ *
+ * Only emitted for fields where a default can be resolved via one of:
+ *  1. `@whenAbsent(value)` - explicit default from annotation (highest priority)
+ *  2. `@optionalParam` - uses `Default[T]` for option-like types
+ *  3. Constructor default - the Scala-level default parameter value
+ *
+ * Fields without any of the above remain plain [[MadeFieldElem]] instances.
+ */
 sealed trait MadeFieldElemWithDefault extends MadeFieldElem:
-  /**
-   * Resolves a default value for this field using the following priority chain (first match wins):
-   *
-   *  1. `@whenAbsent(value)` - explicit default from annotation (highest priority)
-   *  2. `@optionalParam` - uses `Default[T]` for option-like types
-   *  3. Constructor default - the Scala-level default parameter value
-   *  4. `None` - no default available
-   *
-   * @return the default value
-   */
+  /** @return the default value for this field */
   def default: Type
 
 object MadeFieldElem:

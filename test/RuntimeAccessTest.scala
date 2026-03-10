@@ -72,34 +72,13 @@ class RuntimeAccessTest extends munit.FunSuite:
     }
     assertEquals(defaults, List(None, Some("hello"), Some(true)))
   }
-//todo: fix
-//  // --- Runtime .value works on erased MadeSubSingletonElem ---
-//
-//  test("collect singleton values from erased Seq") {
-//    val m: Made.Sum {
-//      type Type = RAEnum
-//      type Label = "RAEnum"
-//      type Metadata = Meta
-//      type Elems = MadeSubSingletonElem {
-//        type Type = RAEnum.A.type
-//        type Label = "A"
-//        type Metadata = Meta
-//      } *: MadeSubSingletonElem {
-//        type Type = RAEnum.B.type
-//        type Label = "B"
-//        type Metadata = Meta
-//      } *: MadeSubElem {
-//        type Type = RAEnum.C
-//        type Label = "C"
-//        type Metadata = Meta
-//      } *: EmptyTuple
-//    } = Made.derived[RAEnum]
-//
-//    val singletons = m.elems.toList.collect { case s: MadeSubSingletonElem => s.value }
-//    assertEquals(singletons.size, 2)
-//    assert(singletons.contains(RAEnum.A))
-//    assert(singletons.contains(RAEnum.B))
-//  }
+  test("MadeSubSingletonElem.value does not compile on erased Seq") {
+    val errors = typeCheckErrors("""
+      val m = Made.derived[RAEnum]
+      val singletons = m.elems.toList.collect { case s: MadeSubSingletonElem => s.value }
+    """)
+    assert(errors.nonEmpty, "Expected compile error for erased .value access")
+  }
 
   // --- elemLabels.toList is the correct alternative to erased _.label ---
 
