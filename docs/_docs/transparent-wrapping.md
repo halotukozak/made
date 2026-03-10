@@ -44,7 +44,7 @@ Calling `Made.derived` on a `@transparent` type returns a `Made.Transparent` mir
 - `def wrap(value: ElemType): Type` - constructs the wrapper from an inner value
 - `type Label` - the type name as a string literal type
 - `type Metadata` - the annotation chain, which includes `@transparent`
-- `def mirroredElems` - a single-element tuple containing one `MadeFieldElem`
+- `def elems` - a single-element tuple containing one `MadeFieldElem`
 
 The `GeneratedElems` type is fixed to `EmptyTuple`. `@generated` members are not supported on transparent types and
 will cause a compile error.
@@ -63,7 +63,7 @@ assert(mirror.unwrap(email) == "alice@example.com")
 assert(mirror.wrap("bob@example.com") == Email("bob@example.com"))
 ```
 
-The `unwrap`/`wrap` pair is the idiomatic way to work with transparent mirrors. While `mirroredElems` is available and
+The `unwrap`/`wrap` pair is the idiomatic way to work with transparent mirrors. While `elems` is available and
 contains a single `MadeFieldElem`, the direct methods make the single-field semantics explicit and avoid tuple
 iteration overhead.
 

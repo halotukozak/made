@@ -158,6 +158,7 @@ values. When a key is absent, it pattern-matches on `MadeFieldElemWithDefault` t
 
 ```scala
 import made.*
+import made.annotation.*
 import scala.compiletime.*
 
 trait FromMap[T]:

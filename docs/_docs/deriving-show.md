@@ -21,14 +21,14 @@ sum, singleton), and finally the `inline def derived` dispatcher that ties them 
 
 The examples throughout this guide use a small set of domain types. Product derivation uses `User`.
 
-```scala
+```scala 3 sc-name:user
 case class User(name: String, age: Int)
 ```
 
 The transparent wrapper example uses `Email`, a single-field case class annotated with `@transparent` so that Made
 derives a `Made.Transparent` mirror instead of `Made.Product`.
 
-```scala
+```scala 3 sc-name:email
 import made.annotation.transparent
 
 @transparent
@@ -37,7 +37,7 @@ case class Email(value: String)
 
 Sum type examples use `Shape` with mixed singleton and parameterised subtypes.
 
-```scala
+```scala 3 sc-name:shape
 sealed trait Shape
 
 case class Circle(radius: Double) extends Shape
@@ -47,6 +47,12 @@ case class Rectangle(width: Double, height: Double) extends Shape
 case object Point extends Shape
 ```
 
+Singleton mirrors use `Origin`, a standalone case object.
+
+```scala 3 sc-name:origin
+case object Origin
+```
+
 ## The Show Trait and Primitive Instances
 
 `Show[T]` converts a value of type `T` to its string representation. The output format is constructor-style:
@@ -54,7 +60,7 @@ case object Point extends Shape
 
 Primitive instances handle the leaf types that product and sum derivation will recurse into.
 
-```scala
+```scala 3 sc-name:show-trait
 trait Show[T]:
   def show(value: T): String
 
@@ -76,15 +82,15 @@ Product derivation is the core Made pattern. Given a mirror for a product type `
 at compile time, then zip them with the product's field values at runtime to build the string representation.
 
 The derivation function must be `inline` because extracting labels from Made's type-level `Label` and
-`MirroredElemLabels` requires `constValue` and `constValueTuple`, which only work in inline context. The mirror
+`ElemLabels` requires `constValue` and `constValueTuple`, which only work in inline context. The mirror
 parameter is typed as `Made.ProductOf[T]` - a type alias for `Made.Product { type Type = T }`. By passing the
-mirror explicitly, the compiler sees the fully refined type (including `Label` and `MirroredElemLabels`) at the
+mirror explicitly, the compiler sees the fully refined type (including `Label` and `ElemLabels`) at the
 inline expansion site.
 
 The steps are:
 
 1. Use `constValue[m.Label]` to get the type name as a runtime string.
-2. Use `constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]` to materialise field labels.
+2. Use `constValueTuple[m.ElemLabels].toList.asInstanceOf[List[String]]` to materialise field labels.
 3. Use `compiletime.summonAll[Tuple.Map[m.ElemTypes, Show]]` to resolve `Show` instances for each field at
    compile time - no manual instance list needed.
 4. Use `value.productIterator.toList` to get field values.
@@ -94,10 +100,12 @@ The steps are:
 Given the imports `import made.*`, along with the `Show` trait and domain types defined above, the product derivation
 function is:
 
-```scala
+```scala 3 sc-name:derive-product sc-compile-with:show-trait
+import made.*
+
 inline def deriveProduct[T <: Product](m: Made.ProductOf[T]): Show[T] = value =>
   val typeName = compiletime.constValue[m.Label]
-  val labels = compiletime.constValueTuple[m.MirroredElemLabels].toList.asInstanceOf[List[String]]
+  val labels = compiletime.constValueTuple[m.ElemLabels].toList.asInstanceOf[List[String]]
   val values = value.productIterator.toList
   val fieldShows = compiletime.summonAll[Tuple.Map[m.ElemTypes, Show]].toList.asInstanceOf[List[Show[Any]]]
   val fields = labels.lazyZip(values).lazyZip(fieldShows).map((label, value, s) => s"$label = ${s.show(value)}")
@@ -109,7 +117,7 @@ The call to `compiletime.summonAll` maps the type-level element tuple `m.ElemTyp
 compile time. For `User`, this resolves `Show[String]` and `Show[Int]` from the primitive givens above. This eliminates
 any need to manually list field instances - the compiler handles it.
 
-The key Made-specific insight here is that `mirroredElems` gives you runtime `MadeFieldElem` objects. While this example
+The key Made-specific insight here is that `elems` gives you runtime `MadeFieldElem` objects. While this example
 uses `constValueTuple` for labels (same as standard Mirror), the runtime element objects become essential when you need
 metadata, defaults, or annotations - capabilities that standard Mirror lacks entirely.
 
@@ -126,14 +134,16 @@ Transparent derivation unwraps the value and delegates to the underlying type's 
 `Show` instance for the single underlying type at compile time. Because the type is transparent, the wrapper name is
 omitted - `Email("alice@example.com")` shows as `alice@example.com`, not `Email(alice@example.com)`.
 
-```scala
+```scala 3 sc-name:derive-transparent sc-compile-with:show-trait
+import made.*
+
 inline def deriveTransparent[T](m: Made.TransparentOf[T]): Show[T] = value =>
   val underlyingShow = compiletime.summonInline[Show[m.ElemType]]
   val inner = m.unwrap(value)
   underlyingShow.show(inner)
 ```
 
-Transparent mirrors also carry a single-element `mirroredElems` tuple containing one `MadeFieldElem`, so you could
+Transparent mirrors also carry a single-element `elems` tuple containing one `MadeFieldElem`, so you could
 iterate it the same way as a product. However, `unwrap`/`wrap` is the idiomatic approach - it makes the single-field
 semantics explicit and avoids the overhead of tuple iteration for what is always exactly one element.
 
@@ -147,7 +157,8 @@ The function below takes a `Made.SumOf[T]` mirror and uses `compiletime.summonAl
 whose `unapply` matches the value - this handles both singleton subtypes (case objects) and parameterised subtypes
 (case classes) uniformly.
 
-```scala
+```scala 3 sc-name:derive-sum sc-compile-with:show-trait
+import made.*
 import scala.reflect.ClassTag
 
 inline def deriveSum[T](m: Made.SumOf[T]): Show[T] = value =>
@@ -168,13 +179,15 @@ value. The `compiletime.summonAll` calls resolve instances for all subtypes at c
 
 ## Singleton Mirrors
 
-`Made.Singleton` is produced for standalone objects and `Unit`. Its `mirroredElems` is `EmptyTuple` - there are no
+`Made.Singleton` is produced for standalone objects and `Unit`. Its `elems` is `EmptyTuple` - there are no
 fields or subtypes to iterate. The singleton instance is available via `value`.
 
 For `Show`, a singleton simply outputs its type label. Sum derivation already handles singletons via `ClassTag`
 matching, but standalone singleton mirrors let you extract the label directly.
 
-```scala
+```scala 3 sc-name:derive-singleton sc-compile-with:show-trait
+import made.*
+
 inline def deriveSingleton[T](m: Made.SingletonOf[T]): Show[T] = _ => compiletime.constValue[m.Label]
 ```
 
@@ -192,7 +205,7 @@ mirror subtype at the inline expansion site, so these pattern matches are exhaus
 The `derives` clause on a type definition triggers this: writing `case class User(...) derives Show` causes the compiler
 to look for `Show.derived`, passing the `Made.Of[User]` instance as the using parameter.
 
-```scala
+```scala 3 sc:nocompile
 inline def derived[T](using m: Made.Of[T]): Show[T] = inline m match
   case m: Made.ProductOf[T & Product] => deriveProduct(m).asInstanceOf[Show[T]]
   case m: Made.SumOf[T] => deriveSum(m)
@@ -206,18 +219,18 @@ The product branch uses `T & Product` as the type bound because `Made.ProductOf[
 With this dispatcher in place, calling `Show.derived[User]` passes `Made.Of[User]` (which is a `Made.ProductOf[T]` at
 runtime) and the `inline match` routes to `deriveProduct`.
 
-```scala
-given Show[Circle] = Show.derived[Circle]
-given Show[Rectangle] = Show.derived[Rectangle]
-given Show[Point.type] = Show.derived[Point.type]
+```scala 3 sc:nocompile
+given Show[Circle] = derived[Circle]
+given Show[Rectangle] = derived[Rectangle]
+given Show[Point.type] = derived[Point.type]
 
-val userShow = Show.derived[User]
+val userShow = derived[User]
 assert(userShow.show(User("Alice", 30)) == "User(name = Alice, age = 30)")
 
-val emailShow = Show.derived[Email]
+val emailShow = derived[Email]
 assert(emailShow.show(Email("alice@example.com")) == "alice@example.com")
 
-val shapeShow: Show[Shape] = Show.derived[Shape]
+val shapeShow: Show[Shape] = derived[Shape]
 assert(shapeShow.show(Point) == "Point")
 assert(shapeShow.show(Circle(3.14)) == "Circle(radius = 3.14)")
 assert(shapeShow.show(Rectangle(2.0, 5.0)) == "Rectangle(width = 2.0, height = 5.0)")
@@ -226,35 +239,9 @@ assert(shapeShow.show(Rectangle(2.0, 5.0)) == "Rectangle(width = 2.0, height = 5
 Note that sum derivation requires `Show` instances for each subtype to be in scope before deriving the sum itself.
 The `given` declarations for `Circle`, `Rectangle`, and `Point.type` provide these.
 
-```scala 3
-val userShow = Show.derived[User]
-val emailShow = Show.derived[Email]
-val shapeShow: Show[Shape] = Show.derived[Shape]
-val originShow = Show.derived[Origin.type]
-
-println(userShow.show(User("Alice", 30)))
-println(emailShow.show(Email("alice@example.com")))
-println(shapeShow.show(Point))
-println(shapeShow.show(Circle(3.14)))
-println(shapeShow.show(Rectangle(2.0, 5.0)))
-println(originShow.show(Origin))
-```
-
-Expected output:
-
-```
-User(name = Alice, age = 30)
-alice@example.com
-Point
-Circle(radius = 3.14)
-Rectangle(width = 2.0, height = 5.0)
-Origin
-```
-
-To adapt this for a different type class, replace the `Show` trait and primitive instances with your type class, keep
-the same `inline def derived` structure with its four-way mirror match, and adjust the per-branch logic. The product
-branch iterates field labels and values. The sum branch dispatches on subtype classes. The singleton branch returns a
-fixed value. The transparent branch delegates to the inner type.
+In a production implementation, these helpers live inside the `Show` companion object so that
+`case class Foo(...) derives Show` can find `Show.derived` automatically. The test suite in
+`test/example/show/Show.scala` shows the complete companion-based version.
 
 This guide covers the fundamentals. A production-ready derivation would also handle e.g. recursive types (e.g.,
 `Tree` with `Branch(left: Tree, right: Tree)`), collection fields like `List[T]` or `Option[T]`, and caching of

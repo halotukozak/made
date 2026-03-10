@@ -16,19 +16,19 @@ computed fields. A JSON schema generator, for example, may want to expose a `ful
 member through the same mirror it uses for constructor fields.
 
 This guide assumes you have read the [type class derivation guide](deriving-show.md) and understand Made mirrors,
-`MadeFieldElem`, and the `mirroredElems` tuple.
+`MadeFieldElem`, and the `elems` tuple.
 
 ## The Two-Tuple Model
 
-Made keeps constructor elements and generated members in separate tuples. The `mirroredElems` method returns a tuple of
+Made keeps constructor elements and generated members in separate tuples. The `elems` method returns a tuple of
 `MadeFieldElem` (for products) or `MadeSubElem`/`MadeSubSingletonElem` (for sums), representing constructor parameters
 or subtypes. The `generatedElems` method returns a tuple of `GeneratedMadeElem`, representing vals and defs annotated
 with `@generated`.
 
 This separation is intentional. Generated members cannot participate in product construction (`fromUnsafeArray`) because
 they are computed from an instance, not stored as constructor parameters. Keeping them in a separate tuple means
-existing derivation code - like `Show[T]` from the [type class derivation guide](deriving-show.md) - continues to work without
-modification. It simply never sees generated members.
+existing derivation code - like `Show[T]` from the [type class derivation guide](deriving-show.md) - continues to work
+without modification. It simply never sees generated members.
 
 The following example defines a `Measurement` type with two constructor fields and one generated def, then demonstrates
 accessing both tuples.
@@ -48,9 +48,9 @@ val m = Measurement(9.81, "m/s")
 assert(displayGen(m) == "9.81 m/s")
 ```
 
-The `mirroredElems` tuple contains elements for `value` and `unit` - the constructor fields. The `generatedElems` tuple
-contains a single element for `display` - the `@generated` def. Derivation code that iterates `mirroredElems` will
-never encounter `display`.
+The `elems` tuple contains elements for `value` and `unit` - the constructor fields. The `generatedElems` tuple
+contains a single element for `display` - the `@generated` def. Derivation code that iterates `elems` will never
+encounter `display`.
 
 ## GeneratedMadeElem API
 
@@ -184,12 +184,12 @@ assert(output.contains("temp=23.5"))
 assert(output.contains("true"))
 ```
 
-The derivation iterates `mirroredElems` labels via `constValueTuple[mirror.MirroredElemLabels]` for constructor field
+The derivation iterates `elems` labels via `constValueTuple[mirror.ElemLabels]` for constructor field
 names, then iterates `generatedElems.toList` for generated members. Each generated element is cast to
 `GeneratedMadeElem { type OuterType = T }` so that `apply(instance)` compiles with the correct outer type. The
 result includes both constructor fields and computed values.
 
 A fully generic version that also extracts generated member labels at compile time would use inline recursion over the
 `GeneratedElems` tuple type, applying the same `Tuple.Map` and `constValueTuple` techniques used for
-`MirroredElemLabels`. For the purposes of this guide, the example above demonstrates the key pattern: accessing both
+`ElemLabels`. For the purposes of this guide, the example above demonstrates the key pattern: accessing both
 tuples and calling `apply` on generated elements.

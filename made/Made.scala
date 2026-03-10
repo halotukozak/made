@@ -120,9 +120,9 @@ sealed trait Made:
   val generatedElems: GeneratedElems
 
 /**
- * Base type for elements within a [[Made]] mirror's [[Elems]] tuple.
+ * Base type for elements within a [[Made.Elems]] tuple.
  *
- * Each element in the [[Elems]] tuple is a subtype of `MadeElem`,
+ * Each element in the [[Made.Elems]] tuple is a subtype of `MadeElem`,
  * carrying the element's type, label, and annotation metadata. The concrete
  * subtype depends on the mirror kind:
  *
@@ -166,7 +166,7 @@ sealed trait MadeElem:
 /**
  * Element representing a constructor parameter in a product type mirror.
  *
- * Each entry in [[Made.Product]]'s [[Elems]] tuple is a `MadeFieldElem`,
+ * Each entry in [[Made.Product.Elems]] tuple is a `MadeFieldElem`,
  * providing the field's type, label, and metadata. Fields that have a default
  * value are represented by the [[MadeFieldElemWithDefault]] subtype.
  *
@@ -208,7 +208,7 @@ object MadeFieldElem:
 /**
  * Element representing a non-singleton subtype in a sum type mirror.
  *
- * Used in [[Made.Sum]]'s [[Elems]] for subtypes that are not
+ * Used in [[Made.Sum.Elems]] for subtypes that are not
  * singleton types (e.g., case classes with parameters). For singleton
  * subtypes (case objects, parameterless enum cases), see
  * [[MadeSubSingletonElem]].
@@ -226,7 +226,7 @@ object MadeSubElem:
 /**
  * Element representing a singleton subtype in a sum type mirror.
  *
- * Extends [[MadeSubElem]]. Used in [[Made.Sum]]'s [[Elems]] for
+ * Extends [[MadeSubElem]]. Used in [[Made.Sum.Elems]] for
  * case objects and parameterless enum cases. Provides access to the
  * singleton instance via the [[value]] method.
  *
@@ -242,8 +242,8 @@ object MadeSubSingletonElem:
 /**
  * Element representing a [[generated]] val or def.
  *
- * Extends [[MadeFieldElem]]. Lives in [[Made]]'s [[GeneratedElems]] tuple
- * (separate from [[Elems]]). A generated element computes a derived
+ * Extends [[MadeFieldElem]]. Lives in [[Made.GeneratedElems]] tuple
+ * (separate from [[Made.Elems]]). A generated element computes a derived
  * value from an instance of the outer type.
  *
  * @see [[MadeFieldElem]]
@@ -557,7 +557,7 @@ object Made:
         def deriveProduct = Expr.summon[Mirror.ProductOf[T]].map {
           case '{
                 type mirroredElemTypes <: Tuple
-                type label <: String;
+                type label <: String
 
                 $m: Mirror.ProductOf[T] {
                   type MirroredLabel = label
@@ -620,7 +620,7 @@ object Made:
         def deriveSum = Expr.summon[Mirror.SumOf[T]].map {
           case '{
                 type mirroredElemTypes <: Tuple
-                type label <: String;
+                type label <: String
 
                 $_ : Mirror.SumOf[T] {
                   type MirroredLabel = label
@@ -690,8 +690,8 @@ object Made:
    * Produced by [[Made.derived]] when `T` is a case class, a zero-field
    * case class, or a value class (extends `AnyVal`).
    *
-   * [[Elems]] is a tuple of [[MadeFieldElem]] representing each
-   * constructor parameter. `GeneratedElems` is a tuple of
+   * [[Made.Elems]] is a tuple of [[MadeFieldElem]] representing each
+   * constructor parameter. [[Made.GeneratedElem]] is a tuple of
    * [[GeneratedMadeElem]] for any `@generated` members.
    *
    * @see [[Made]]
