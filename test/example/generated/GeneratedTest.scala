@@ -27,8 +27,8 @@ class GeneratedTest extends munit.FunSuite:
     val p = Prod(2, "x")
     assert(gAb(p) == "2-x")
     assert(gLen(p) == 1)
-    assert(gAb.default.isEmpty)
-    assert(gLen.default.isEmpty)
+    assert(!gAb.isInstanceOf[MadeFieldElemWithDefault])
+    assert(!gLen.isInstanceOf[MadeFieldElemWithDefault])
   }
 
   test("shape") {
