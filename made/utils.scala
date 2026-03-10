@@ -10,7 +10,7 @@ extension (comp: Expr.type)
 // like ValueOf but without the implicit search and boxing
 inline private[made] def singleValueOf[T]: T = ${ singleValueOfImpl[T] }
 
-private def singleValueOfImpl[T:Type](using quotes: Quotes): Expr[T] =
+private def singleValueOfImpl[T: Type](using quotes: Quotes): Expr[T] =
   import quotes.reflect.*
   val term = TypeRepr.of[T] match
     case ConstantType(c: Constant) => Literal(c)

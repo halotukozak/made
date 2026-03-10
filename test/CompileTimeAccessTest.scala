@@ -8,7 +8,7 @@ class CompileTimeAccessTest extends munit.FunSuite:
 
   inline def collectLabels[Tup <: Tuple]: Tuple.Map[Tup, Made.ExtractLabel] = inline compiletime.erasedValue[Tup] match
     case _: EmptyTuple => EmptyTuple
-    case _: (m *: t)   => compiletime.constValue[Made.ExtractLabel[m]] *: collectLabels[t]
+    case _: (m *: t) => compiletime.constValue[Made.ExtractLabel[m]] *: collectLabels[t]
 
   test("collectLabels for product fields") {
     val mirror = Made.derived[CTProduct]

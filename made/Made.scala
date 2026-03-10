@@ -2,7 +2,7 @@ package made
 
 import made.annotation.*
 
-import scala.annotation.{Annotation, implicitNotFound}
+import scala.annotation.{implicitNotFound, Annotation}
 import scala.deriving.Mirror
 import scala.quoted.*
 
