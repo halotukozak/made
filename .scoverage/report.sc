@@ -1,4 +1,4 @@
-//> using scala 3.8.3-RC1
+//> using scala 3.8.3-RC2
 //> using dep org.scoverage::scalac-scoverage-reporter:2.5.2
 //> using dep org.scoverage::scalac-scoverage-domain:2.5.2
 //> using dep org.scoverage::scalac-scoverage-serializer:2.5.2
@@ -14,10 +14,9 @@ val sourceDir = new File(".")
 val measurementDir = new File(".scoverage")
 val outDir = new File(".scoverage/report")
 
-if (!coverageFile.exists()) {
+if !coverageFile.exists() then
   println(s"Error: Coverage file not found at ${coverageFile.getAbsolutePath}")
   sys.exit(1)
-}
 
 val coverage = Serializer.deserialize(coverageFile, sourceDir)
 
