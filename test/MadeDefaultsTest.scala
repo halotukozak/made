@@ -11,11 +11,11 @@ class MadeDefaultsTest extends munit.FunSuite:
         type Type = Int
         type Label = "x"
         type Metadata = Meta
-      } *: MadeFieldElem {
+      } *: MadeFieldElemWithDefault {
         type Type = String
         type Label = "y"
         type Metadata = Meta
-      } *: MadeFieldElem {
+      } *: MadeFieldElemWithDefault {
         type Type = Boolean
         type Label = "z"
         type Metadata = Meta
@@ -24,9 +24,9 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (x, y, z) = m.elems
 
-    assert(x.default.isEmpty)
-    assert(y.default.contains("hello"))
-    assert(z.default.contains(true))
+    assert(!x.isInstanceOf[MadeFieldElemWithDefault])
+    assertEquals(y.default, "hello")
+    assertEquals(z.default, true)
   }
 
   test("case class with all defaults") {
@@ -34,11 +34,11 @@ class MadeDefaultsTest extends munit.FunSuite:
       type Type = AllDefaults
       type Label = "AllDefaults"
       type Metadata = Meta
-      type Elems = MadeFieldElem {
+      type Elems = MadeFieldElemWithDefault {
         type Type = Int
         type Label = "a"
         type Metadata = Meta
-      } *: MadeFieldElem {
+      } *: MadeFieldElemWithDefault {
         type Type = String
         type Label = "b"
         type Metadata = Meta
@@ -47,8 +47,8 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (a, b) = m.elems
 
-    assert(a.default.contains(1))
-    assert(b.default.contains("test"))
+    assertEquals(a.default, 1)
+    assertEquals(b.default, "test")
   }
 
   test("case class with mixed defaults") {
@@ -60,7 +60,7 @@ class MadeDefaultsTest extends munit.FunSuite:
         type Type = Int
         type Label = "required"
         type Metadata = Meta
-      } *: MadeFieldElem {
+      } *: MadeFieldElemWithDefault {
         type Type = String
         type Label = "optional"
         type Metadata = Meta
@@ -69,15 +69,15 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (a, b) = m.elems
 
-    assert(a.default.isEmpty)
-    assert(b.default.contains("default"))
+    assert(!a.isInstanceOf[MadeFieldElemWithDefault])
+    assertEquals(b.default, "default")
   }
 
-  test("GeneratedDerElem.default returns None") {
+  test("GeneratedMadeElem has no default") {
     val m = Made.derived[WithDefaultGenerated]
 
     val y *: EmptyTuple = m.generatedElems
-    assert(y.default.isEmpty)
+    assert(!y.isInstanceOf[MadeFieldElemWithDefault])
   }
 
   test("@whenAbsent provides default") {
@@ -85,8 +85,8 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (x, y) = m.elems
 
-    assert(x.default.isEmpty)
-    assert(y.default.contains("absent"))
+    assert(!x.isInstanceOf[MadeFieldElemWithDefault])
+    assertEquals(y.default, "absent")
   }
 
   test("@whenAbsent takes priority over Scala default value") {
@@ -94,8 +94,8 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (a, b) = m.elems
 
-    assert(a.default.contains(42))
-    assert(b.default.contains("fromAnnotation"))
+    assertEquals(a.default, 42)
+    assertEquals(b.default, "fromAnnotation")
   }
 
   test("mixing @whenAbsent, Scala defaults, and no defaults") {
@@ -103,9 +103,9 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (a, b, c) = m.elems
 
-    assert(a.default.isEmpty)
-    assert(b.default.contains(99))
-    assert(c.default.contains("scalaDefault"))
+    assert(!a.isInstanceOf[MadeFieldElemWithDefault])
+    assertEquals(b.default, 99)
+    assertEquals(c.default, "scalaDefault")
   }
 
   test("recursive case class with @whenAbsent") {
@@ -113,8 +113,8 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (value, next) = m.elems
 
-    assert(value.default.isEmpty)
-    assert(next.default.contains(None))
+    assert(!value.isInstanceOf[MadeFieldElemWithDefault])
+    assertEquals(next.default, None)
   }
 
   test("recursive case class with Scala default") {
@@ -122,8 +122,8 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (value, next) = m.elems
 
-    assert(value.default.isEmpty)
-    assert(next.default.contains(None))
+    assert(!value.isInstanceOf[MadeFieldElemWithDefault])
+    assertEquals(next.default, None)
   }
 
   test("@optionalParam provides default from OptionLike") {
@@ -131,9 +131,9 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (x, y, z) = m.elems
 
-    assertEquals(x.default, Some(None))
-    assertEquals(y.default, Some(null: String | Null))
-    assertEquals(z.default, None)
+    assertEquals(x.default, Option.empty[Int])
+    assertEquals(y.default, null: String | Null)
+    assert(!z.isInstanceOf[MadeFieldElemWithDefault])
   }
 
   test("@optionalParam priority") {
@@ -142,11 +142,10 @@ class MadeDefaultsTest extends munit.FunSuite:
     val (a, b) = m.elems
 
     // @whenAbsent(Some(42)) should take priority over @optionalParam
-    assertEquals(a.default, Some(Some(42)))
+    assertEquals(a.default, Some(42))
     // @optionalParam should take priority over Scala default None
-    // Wait, let's check the code:
     // fromWhenAbsent orElse fromOptionalParam orElse fromDefaultValue
-    assertEquals(b.default, Some(None))
+    assertEquals(b.default, Option.empty[Int])
   }
 
   test("generic case class with Scala default") {
@@ -154,8 +153,8 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (a, label) = m.elems
 
-    assert(a.default.isEmpty)
-    assert(label.default.contains("default"))
+    assert(!a.isInstanceOf[MadeFieldElemWithDefault])
+    assertEquals(label.default, "default")
   }
 
   test("generic case class with type-dependent default") {
@@ -163,8 +162,8 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (a, b) = m.elems
 
-    assert(a.default.isEmpty)
-    assert(b.default.contains(None))
+    assert(!a.isInstanceOf[MadeFieldElemWithDefault])
+    assertEquals(b.default, Option.empty[String])
   }
 
   test("generic case class with @whenAbsent takes priority") {
@@ -172,8 +171,8 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val (a, b) = m.elems
 
-    assert(a.default.isEmpty)
-    assert(b.default.contains("annotated"))
+    assert(!a.isInstanceOf[MadeFieldElemWithDefault])
+    assertEquals(b.default, "annotated")
   }
 
   test("@optionalParam with custom Default") {
@@ -181,7 +180,7 @@ class MadeDefaultsTest extends munit.FunSuite:
 
     val m = Made.derived[WithCustomOptional]
     val x *: EmptyTuple = m.elems
-    assertEquals(x.default, Some(CustomOpt("none")))
+    assertEquals(x.default, CustomOpt("none"))
   }
 
 case class WithDefaults(x: Int, y: String = "hello", z: Boolean = true)

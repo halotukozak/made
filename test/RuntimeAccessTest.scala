@@ -1,6 +1,7 @@
 package made
 
 import made.annotation.*
+
 import scala.compiletime.testing.typeCheckErrors
 
 class RuntimeAccessTest extends munit.FunSuite:
@@ -60,47 +61,23 @@ class RuntimeAccessTest extends munit.FunSuite:
     assertEquals(genElems.size, 2)
   }
 
-  // --- Runtime .default works on erased MadeFieldElem ---
+  // --- Runtime default access ---
 
-  test("Seq[MadeFieldElem].map(_.default) works at runtime") {
+  test("Seq[MadeFieldElem] runtime default access via MadeFieldElemWithDefault") {
     val m = Made.derived[RAWithDefaults]
     val elems = m.elems.toList.asInstanceOf[List[MadeFieldElem]]
-    val defaults = elems.map(_.default)
+    val defaults = elems.map {
+      case e: MadeFieldElemWithDefault => Some(e.default)
+      case _ => None
+    }
     assertEquals(defaults, List(None, Some("hello"), Some(true)))
   }
-
-  test("Seq[GeneratedMadeElem].map(_.default) all None") {
-    val m = Made.derived[RAWithGenerated]
-    val genElems = m.generatedElems.toList.asInstanceOf[List[GeneratedMadeElem]]
-    assertEquals(genElems.map(_.default), List(None, None))
-  }
-
-  // --- Runtime .value works on erased MadeSubSingletonElem ---
-
-  test("collect singleton values from erased Seq") {
-    val m: Made.Sum {
-      type Type = RAEnum
-      type Label = "RAEnum"
-      type Metadata = Meta
-      type Elems = MadeSubSingletonElem {
-        type Type = RAEnum.A.type
-        type Label = "A"
-        type Metadata = Meta
-      } *: MadeSubSingletonElem {
-        type Type = RAEnum.B.type
-        type Label = "B"
-        type Metadata = Meta
-      } *: MadeSubElem {
-        type Type = RAEnum.C
-        type Label = "C"
-        type Metadata = Meta
-      } *: EmptyTuple
-    } = Made.derived[RAEnum]
-
-    val singletons = m.elems.toList.collect { case s: MadeSubSingletonElem => s.value }
-    assertEquals(singletons.size, 2)
-    assert(singletons.contains(RAEnum.A))
-    assert(singletons.contains(RAEnum.B))
+  test("MadeSubSingletonElem.value does not compile on erased Seq") {
+    val errors = typeCheckErrors("""
+      val m = Made.derived[RAEnum]
+      val singletons = m.elems.toList.collect { case s: MadeSubSingletonElem => s.value }
+    """)
+    assert(errors.nonEmpty, "Expected compile error for erased .value access")
   }
 
   // --- elemLabels.toList is the correct alternative to erased _.label ---
@@ -123,7 +100,10 @@ class RuntimeAccessTest extends munit.FunSuite:
     val m = Made.derived[RAWithDefaults]
     val labels = m.elemLabels.toList.asInstanceOf[List[String]]
     val elems = m.elems.toList.asInstanceOf[List[MadeFieldElem]]
-    val zipped = labels.zip(elems.map(_.default))
+    val zipped = labels.zip(elems.map {
+      case e: MadeFieldElemWithDefault => Some(e.default)
+      case _ => None
+    })
     assertEquals(zipped, List(("x", None), ("y", Some("hello")), ("z", Some(true))))
   }
 
@@ -169,8 +149,8 @@ class RuntimeAccessTest extends munit.FunSuite:
 
   test("round-trip: collect defaults and build instance") {
     val m = Made.derived[RAAllDefaults]
-    val elems = m.elems.toList.asInstanceOf[List[MadeFieldElem]]
-    val defaults = elems.map(_.default.get)
+    val elems = m.elems.toList.asInstanceOf[List[MadeFieldElemWithDefault]]
+    val defaults = elems.map(_.default)
     val instance = m.fromUnsafeArray(defaults.toArray)
     assertEquals(instance, RAAllDefaults())
   }
@@ -182,8 +162,6 @@ class RuntimeAccessTest extends munit.FunSuite:
     val mirrors: Seq[Made] = Seq(m)
     assertEquals(mirrors.head.elems.toList.size, 1)
   }
-
-// --- Fixtures ---
 
 case class RAProduct(x: Int, y: String, z: Boolean)
 case class RAEmpty()

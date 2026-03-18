@@ -142,14 +142,14 @@ class GeneratedAnnotationTest extends munit.FunSuite:
     assertEquals(g3(instance), true)
   }
 
-  // --- Default always None ---
+  // --- Generated elems are not MadeFieldElemWithDefault ---
 
-  test("all generated defaults are None") {
+  test("all generated elems have no default") {
     val m = Made.derived[MultiGen]
     val (g1, g2, g3) = m.generatedElems
-    assertEquals(g1.default, None)
-    assertEquals(g2.default, None)
-    assertEquals(g3.default, None)
+    assert(!g1.isInstanceOf[MadeFieldElemWithDefault])
+    assert(!g2.isInstanceOf[MadeFieldElemWithDefault])
+    assert(!g3.isInstanceOf[MadeFieldElemWithDefault])
   }
 
   // --- @name on generated ---
