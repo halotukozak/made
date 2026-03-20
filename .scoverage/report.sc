@@ -1,4 +1,4 @@
-//> using scala 3.8.3-RC2
+//> using scala 3.8.3-RC3
 //> using dep org.scoverage::scalac-scoverage-reporter:2.5.2
 //> using dep org.scoverage::scalac-scoverage-domain:2.5.2
 //> using dep org.scoverage::scalac-scoverage-serializer:2.5.2
